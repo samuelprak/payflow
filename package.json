@@ -6,9 +6,16 @@
     "packages/*"
   ],
   "devDependencies": {
+    "@commitlint/config-conventional": "^19.8.0",
+    "commitlint": "^19.8.0",
     "husky": "^9.1.7"
   },
   "scripts": {
     "prepare": "husky"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
   }
 }

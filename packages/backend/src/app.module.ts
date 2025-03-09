@@ -1,11 +1,15 @@
 import { Module } from "@nestjs/common"
-import { TypeOrmModule } from "@nestjs/typeorm"
 import { ConfigModule, ConfigService } from "@nestjs/config"
+import { TypeOrmModule } from "@nestjs/typeorm"
+import { CaslModule } from "nest-casl"
+import { join } from "path"
+import { CaslUser } from "src/casl/models/casl-user"
+import { Roles } from "src/casl/models/roles"
+import { PaymentProviderModule } from "src/payment-provider/payment-provider.module"
+import { CustomRequest } from "src/request"
+import { StripeModule } from "src/stripe/stripe.module"
 import { CustomerModule } from "./customer/customer.module"
 import { TenantModule } from "./tenant/tenant.module"
-import { join } from "path"
-import { StripeModule } from "src/stripe/stripe.module"
-import { PaymentProviderModule } from "src/payment-provider/payment-provider.module"
 
 @Module({
   imports: [
@@ -27,6 +31,10 @@ import { PaymentProviderModule } from "src/payment-provider/payment-provider.mod
         autoLoadEntities: true,
       }),
       inject: [ConfigService],
+    }),
+    CaslModule.forRoot<Roles, CaslUser, CustomRequest>({
+      getUserFromRequest: (request: CustomRequest) =>
+        new CaslUser(request.tenant.id),
     }),
     CustomerModule,
     TenantModule,
