@@ -5,6 +5,7 @@ import { CustomerRepository } from "src/customer/repositories/customer.repositor
 import { PaymentProviderService } from "src/payment-provider/services/payment-provider.service"
 import { v4 as uuidv4 } from "uuid"
 import { CustomerService } from "./customer.service"
+import { PaymentProviderClientInterface } from "src/payment-provider/interfaces/payment-provider-client.interface"
 
 describe("CustomerService", () => {
   let service: CustomerService
@@ -31,7 +32,7 @@ describe("CustomerService", () => {
       repository.sync.mockResolvedValue(customer)
       paymentProviderService.forTenant.mockResolvedValue({
         syncCustomer: syncCustomerFn,
-      })
+      } as unknown as PaymentProviderClientInterface)
 
       const createdCustomer = await service.syncCustomer({
         email: "test@email.com",

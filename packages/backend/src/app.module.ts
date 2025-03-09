@@ -27,7 +27,6 @@ import { TenantModule } from "./tenant/tenant.module"
         password: configService.get("DATABASE_PASSWORD"),
         database: configService.get("DATABASE_NAME"),
         entities: [join(__dirname, "../**/*.entity{.ts,.js}")],
-        synchronize: true, // Set to false in production
         autoLoadEntities: true,
       }),
       inject: [ConfigService],

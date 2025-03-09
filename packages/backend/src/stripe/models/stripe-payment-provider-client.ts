@@ -1,6 +1,9 @@
+import { UnprocessableEntityException } from "@nestjs/common"
 import { BaseCustomer } from "src/payment-provider/interfaces/base-customer"
+import { CheckoutParams } from "src/payment-provider/interfaces/checkout-params"
 import { PaymentProviderClientInterface } from "src/payment-provider/interfaces/payment-provider-client.interface"
-import { createCustomer } from "src/stripe/models/stripe/create-customer"
+import { createCheckout } from "src/stripe/models/stripe/use-cases/create-checkout"
+import { syncCustomer } from "src/stripe/models/stripe/use-cases/sync-customer"
 import { StripeCustomerRepository } from "src/stripe/repositories/stripe-customer.repository"
 import Stripe from "stripe"
 
@@ -24,15 +27,26 @@ export class StripePaymentProviderClient
   }
 
   async syncCustomer(baseCustomer: BaseCustomer): Promise<void> {
-    const existingCustomer =
-      await this.stripeCustomerRepository.findOneByCustomerId(baseCustomer.id)
+    await syncCustomer({
+      baseCustomer,
+      stripe: this.stripe,
+      stripeCustomerRepository: this.stripeCustomerRepository,
+    })
+  }
 
-    if (!existingCustomer) {
-      const stripeCustomer = await createCustomer(this.stripe, baseCustomer)
-      await this.stripeCustomerRepository.create({
-        stripeCustomerId: stripeCustomer.id,
-        customerId: baseCustomer.id,
-      })
+  async createCheckout({ customerId, products }: CheckoutParams) {
+    const stripeCustomer =
+      await this.stripeCustomerRepository.findOneByCustomerId(customerId)
+    if (!stripeCustomer) {
+      throw new UnprocessableEntityException(
+        "Stripe customer not found, please sync customer first",
+      )
     }
+
+    return createCheckout({
+      stripe: this.stripe,
+      products,
+      stripeCustomer,
+    })
   }
 }

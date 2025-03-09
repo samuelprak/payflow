@@ -9,6 +9,7 @@ import { CustomerController } from "./controllers/customer.controller"
 import { Customer } from "./entities/customer.entity"
 import { CustomerService } from "./services/customer.service"
 import { CheckoutController } from "src/customer/controllers/checkout.controller"
+import { CheckoutService } from "src/customer/services/checkout.service"
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import { CheckoutController } from "src/customer/controllers/checkout.controller
     TenantModule,
     PaymentProviderModule,
   ],
-  providers: [CustomerService, CustomerRepository],
+  providers: [CustomerService, CustomerRepository, CheckoutService],
   controllers: [CustomerController, CheckoutController],
 })
 export class CustomerModule {}
