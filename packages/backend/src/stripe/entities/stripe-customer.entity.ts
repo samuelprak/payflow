@@ -6,6 +6,7 @@ import {
   JoinColumn,
   OneToOne,
   PrimaryGeneratedColumn,
+  RelationId,
   Unique,
   UpdateDateColumn,
 } from "typeorm"
@@ -20,8 +21,8 @@ export class StripeCustomer {
   @JoinColumn()
   customer: Customer
 
-  // @RelationId((stripeCustomer: StripeCustomer) => stripeCustomer.customer)
-  // customerId: string
+  @RelationId((stripeCustomer: StripeCustomer) => stripeCustomer.customer)
+  customerId: string
 
   @Column()
   stripeCustomerId: string

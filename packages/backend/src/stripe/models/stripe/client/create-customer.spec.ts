@@ -27,14 +27,19 @@ describe("createCustomer", () => {
 
     const response = await createCustomer(stripe, baseCustomer)
 
-    expect(stripe.customers.create).toHaveBeenCalledWith({
-      email: baseCustomer.email,
-      metadata: {
-        tenantId: baseCustomer.tenantId,
-        userId: baseCustomer.id,
-        userRef: baseCustomer.userRef,
+    expect(stripe.customers.create).toHaveBeenCalledWith(
+      {
+        email: baseCustomer.email,
+        metadata: {
+          tenantId: baseCustomer.tenantId,
+          userId: baseCustomer.id,
+          userRef: baseCustomer.userRef,
+        },
       },
-    })
+      {
+        idempotencyKey: `tenant-${baseCustomer.tenantId}-ref-${baseCustomer.userRef}`,
+      },
+    )
     expect(response).toEqual({ id: mockCustomer.id })
   })
 

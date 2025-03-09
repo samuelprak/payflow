@@ -10,6 +10,10 @@ import { Customer } from "./entities/customer.entity"
 import { CustomerService } from "./services/customer.service"
 import { CheckoutController } from "src/customer/controllers/checkout.controller"
 import { CheckoutService } from "src/customer/services/checkout.service"
+import { BullModule } from "@nestjs/bullmq"
+import { WEBHOOK_QUEUE } from "src/customer/customer.constants"
+import { WebhookProcessor } from "src/customer/processors/webhook.processor"
+import { SendWebhookOnCustomerUpdatedListener } from "src/customer/listeners/send-webhook-on-customer-updated.listener"
 
 @Module({
   imports: [
@@ -17,8 +21,21 @@ import { CheckoutService } from "src/customer/services/checkout.service"
     CaslModule.forFeature({ permissions: customerPermissions }),
     TenantModule,
     PaymentProviderModule,
+    BullModule.registerQueue({
+      name: WEBHOOK_QUEUE,
+      defaultJobOptions: {
+        attempts: 20,
+        backoff: { type: "exponential", delay: 1000 },
+      },
+    }),
   ],
-  providers: [CustomerService, CustomerRepository, CheckoutService],
+  providers: [
+    CustomerService,
+    CustomerRepository,
+    CheckoutService,
+    WebhookProcessor,
+    SendWebhookOnCustomerUpdatedListener,
+  ],
   controllers: [CustomerController, CheckoutController],
 })
 export class CustomerModule {}

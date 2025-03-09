@@ -17,6 +17,13 @@ export class CustomerRepository {
     private customerRepository: Repository<Customer>,
   ) {}
 
+  async findOneWithTenant(id: string) {
+    return this.customerRepository.findOne({
+      where: { id },
+      relations: ["tenant"],
+    })
+  }
+
   async sync({ email, userRef, tenant }: FindOrCreateParams) {
     const customer = await this.customerRepository.findOne({
       where: { userRef, tenant: { id: tenant.id } },

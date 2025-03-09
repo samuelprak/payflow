@@ -10,6 +10,8 @@ import { CustomRequest } from "src/request"
 import { StripeModule } from "src/stripe/stripe.module"
 import { CustomerModule } from "./customer/customer.module"
 import { TenantModule } from "./tenant/tenant.module"
+import { BullModule } from "@nestjs/bullmq"
+import { EventEmitterModule } from "@nestjs/event-emitter"
 
 @Module({
   imports: [
@@ -27,6 +29,7 @@ import { TenantModule } from "./tenant/tenant.module"
         password: configService.get("DATABASE_PASSWORD"),
         database: configService.get("DATABASE_NAME"),
         entities: [join(__dirname, "../**/*.entity{.ts,.js}")],
+        migrations: [join(__dirname, "database/migrations/*{.ts,.js}")],
         autoLoadEntities: true,
       }),
       inject: [ConfigService],
@@ -35,6 +38,16 @@ import { TenantModule } from "./tenant/tenant.module"
       getUserFromRequest: (request: CustomRequest) =>
         new CaslUser(request.tenant.id),
     }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        connection: {
+          url: configService.get("REDIS_URL") as string,
+        },
+      }),
+      inject: [ConfigService],
+    }),
+    EventEmitterModule.forRoot(),
     CustomerModule,
     TenantModule,
     StripeModule,

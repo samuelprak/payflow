@@ -20,6 +20,9 @@ export class StripeAccount {
   @Column()
   stripeSecretKey: string
 
+  @Column()
+  stripeWebhookSecret: string
+
   @ManyToMany(() => Tenant, (tenant) => tenant.stripeAccounts)
   @JoinTable()
   tenants: Tenant[]

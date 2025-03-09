@@ -15,6 +15,12 @@ export class StripeCustomerRepository {
     private readonly repository: Repository<StripeCustomer>,
   ) {}
 
+  async findOneByStripeCustomerId(
+    stripeCustomerId: string,
+  ): Promise<StripeCustomer | null> {
+    return this.repository.findOneBy({ stripeCustomerId })
+  }
+
   async findOneByCustomerId(
     customerId: string,
   ): Promise<StripeCustomer | null> {

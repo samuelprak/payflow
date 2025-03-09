@@ -9,6 +9,7 @@ export class TenantFactory extends Factory<Tenant> {
     return {
       name: "Test Tenant",
       apiKey: "test-api-key",
+      webhookUrl: "https://test-webhook.com",
     }
   }
 }

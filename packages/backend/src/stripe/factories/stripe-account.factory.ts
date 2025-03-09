@@ -15,6 +15,7 @@ export class StripeAccountFactory extends Factory<StripeAccount> {
     return {
       stripePublishableKey: "pk_test_123",
       stripeSecretKey: "sk_test_123",
+      stripeWebhookSecret: "whsec_123",
       tenants: new LazyInstanceAttribute(
         (instance) =>
           new CollectionSubfactory(TenantFactory, 1, {

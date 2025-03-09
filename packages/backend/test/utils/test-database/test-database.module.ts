@@ -80,8 +80,4 @@ export class TestDatabaseModule {
       await this.dataSource.synchronize(true)
     }
   }
-
-  async onApplicationShutdown(): Promise<void> {
-    await TestDatabaseModule.closeConnection()
-  }
 }

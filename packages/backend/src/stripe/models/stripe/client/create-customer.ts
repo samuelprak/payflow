@@ -9,14 +9,19 @@ export async function createCustomer(
   stripe: Stripe,
   baseCustomer: BaseCustomer,
 ): Promise<Response> {
-  const stripeCustomer = await stripe.customers.create({
-    email: baseCustomer.email,
-    metadata: {
-      tenantId: baseCustomer.tenantId,
-      userId: baseCustomer.id,
-      userRef: baseCustomer.userRef,
+  const stripeCustomer = await stripe.customers.create(
+    {
+      email: baseCustomer.email,
+      metadata: {
+        tenantId: baseCustomer.tenantId,
+        userId: baseCustomer.id,
+        userRef: baseCustomer.userRef,
+      },
     },
-  })
+    {
+      idempotencyKey: `tenant-${baseCustomer.tenantId}-ref-${baseCustomer.userRef}`,
+    },
+  )
 
   return { id: stripeCustomer.id }
 }

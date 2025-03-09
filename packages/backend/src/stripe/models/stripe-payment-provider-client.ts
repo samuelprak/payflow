@@ -3,6 +3,7 @@ import { BaseCustomer } from "src/payment-provider/interfaces/base-customer"
 import { CheckoutParams } from "src/payment-provider/interfaces/checkout-params"
 import { PaymentProviderClientInterface } from "src/payment-provider/interfaces/payment-provider-client.interface"
 import { createCheckout } from "src/stripe/models/stripe/use-cases/create-checkout"
+import { getSubscriptions } from "src/stripe/models/stripe/use-cases/get-subscriptions"
 import { syncCustomer } from "src/stripe/models/stripe/use-cases/sync-customer"
 import { StripeCustomerRepository } from "src/stripe/repositories/stripe-customer.repository"
 import Stripe from "stripe"
@@ -47,6 +48,17 @@ export class StripePaymentProviderClient
       stripe: this.stripe,
       products,
       stripeCustomer,
+    })
+  }
+
+  async getSubscriptions(customerId: string) {
+    const stripeCustomer =
+      await this.stripeCustomerRepository.findOneByCustomerId(customerId)
+    if (!stripeCustomer) return []
+
+    return getSubscriptions({
+      stripe: this.stripe,
+      stripeCutomerId: stripeCustomer.stripeCustomerId,
     })
   }
 }

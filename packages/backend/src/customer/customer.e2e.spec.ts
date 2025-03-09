@@ -14,6 +14,8 @@ import { TenantFactory } from "src/tenant/factories/tenant.factory"
 import * as request from "supertest"
 import { asTenant } from "test/helpers/as-tenant"
 import { assertDifference } from "test/helpers/assert-difference"
+import { createTestingApplication } from "test/utils/create-testing-application"
+import { TestBullModule } from "test/utils/test-bull.module"
 import { TestDatabaseModule } from "test/utils/test-database/test-database.module"
 import { v4 as uuidv4 } from "uuid"
 
@@ -24,6 +26,7 @@ describe("Customer", () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
+        TestBullModule.forRoot(),
         TestDatabaseModule.forRoot(),
         CaslModule.forRoot<Roles, CaslUser, CustomRequest>({
           getUserFromRequest: (request: CustomRequest) =>
@@ -34,8 +37,7 @@ describe("Customer", () => {
       ],
     }).compile()
 
-    app = moduleRef.createNestApplication()
-    await app.init()
+    app = await createTestingApplication(moduleRef)
   })
 
   beforeEach(async () => {

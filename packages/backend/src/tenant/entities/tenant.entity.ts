@@ -24,6 +24,9 @@ export class Tenant {
   @OneToMany(() => Customer, (customer) => customer.tenant)
   customers: Customer[]
 
+  @Column()
+  webhookUrl: string
+
   @ManyToMany(() => StripeAccount, (stripeAccount) => stripeAccount.tenants)
   stripeAccounts: StripeAccount[]
 

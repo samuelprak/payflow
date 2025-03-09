@@ -10,6 +10,10 @@ export class StripeAccountRepository {
     private readonly repository: Repository<StripeAccount>,
   ) {}
 
+  findOneById(id: string): Promise<StripeAccount> {
+    return this.repository.findOneByOrFail({ id })
+  }
+
   findOneByTenantId(tenantId: string): Promise<StripeAccount | null> {
     return this.repository
       .createQueryBuilder("stripeAccount")

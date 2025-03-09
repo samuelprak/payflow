@@ -6,6 +6,7 @@ import { PaymentProviderService } from "src/payment-provider/services/payment-pr
 import { v4 as uuidv4 } from "uuid"
 import { CustomerService } from "./customer.service"
 import { PaymentProviderClientInterface } from "src/payment-provider/interfaces/payment-provider-client.interface"
+import { get } from "http"
 
 describe("CustomerService", () => {
   let service: CustomerService
@@ -32,6 +33,7 @@ describe("CustomerService", () => {
       repository.sync.mockResolvedValue(customer)
       paymentProviderService.forTenant.mockResolvedValue({
         syncCustomer: syncCustomerFn,
+        getSubscriptions: jest.fn().mockResolvedValue([]),
       } as unknown as PaymentProviderClientInterface)
 
       const createdCustomer = await service.syncCustomer({
@@ -44,6 +46,7 @@ describe("CustomerService", () => {
       expect(createdCustomer.id).toEqual(customer.id)
       expect(createdCustomer.email).toEqual("test@email.com")
       expect(createdCustomer.userRef).toEqual("test-user-ref")
+      expect(createdCustomer.subscriptions).toEqual([])
 
       expect(repository.sync).toHaveBeenCalledWith({
         email: "test@email.com",

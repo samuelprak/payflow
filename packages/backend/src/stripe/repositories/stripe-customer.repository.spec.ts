@@ -24,6 +24,26 @@ describe("StripeCustomerRepository", () => {
     repository = module.get(StripeCustomerRepository)
   })
 
+  describe("findOneByStripeCustomerId", () => {
+    it("finds a stripe customer by stripeCustomerId", async () => {
+      const stripeCustomer = await new StripeCustomerFactory().create()
+
+      const resultOrNull = await repository.findOneByStripeCustomerId(
+        stripeCustomer.stripeCustomerId,
+      )
+
+      expect(resultOrNull).toBeDefined()
+      const result = resultOrNull as StripeCustomer
+      expect(result.id).toEqual(stripeCustomer.id)
+    })
+
+    it("returns null if no stripe customer is found", async () => {
+      const result = await repository.findOneByStripeCustomerId(uuidv4())
+
+      expect(result).toBeNull()
+    })
+  })
+
   describe("findOneByCustomerId", () => {
     it("finds a stripe customer by customerId", async () => {
       const stripeCustomer = await new StripeCustomerFactory().create()

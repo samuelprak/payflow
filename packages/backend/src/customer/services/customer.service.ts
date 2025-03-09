@@ -22,7 +22,8 @@ export class CustomerService {
 
     const client = await this.paymentProviderService.forTenant(tenant.id)
     await client.syncCustomer(customer.toBaseCustomer())
+    const subscriptions = await client.getSubscriptions(customer.id)
 
-    return CustomerGet.fromEntity(customer)
+    return CustomerGet.fromEntity(customer, subscriptions)
   }
 }
