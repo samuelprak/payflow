@@ -8,8 +8,6 @@ export class PaymentProviderService {
   constructor(private readonly discoveryService: DiscoveryService) {}
 
   async forTenant(tenantId: string) {
-    const providers = this.getRegisteredPaymentProviders()
-
     const possibleClients = await Promise.all(
       this.getRegisteredPaymentProviders().map((provider) =>
         provider.getClientForTenant(tenantId),

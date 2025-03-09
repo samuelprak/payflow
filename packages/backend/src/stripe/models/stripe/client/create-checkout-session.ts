@@ -1,8 +1,5 @@
 import { BadRequestException } from "@nestjs/common"
-import {
-  CheckoutParams,
-  CheckoutProduct,
-} from "src/payment-provider/interfaces/checkout-params"
+import { CheckoutProduct } from "src/payment-provider/interfaces/checkout-params"
 import Stripe from "stripe"
 
 type Params = {

@@ -2,11 +2,10 @@ import { createMock } from "@golevelup/ts-jest"
 import { Test, TestingModule } from "@nestjs/testing"
 import { CustomerFactory } from "src/customer/factories/customer.factory"
 import { CustomerRepository } from "src/customer/repositories/customer.repository"
+import { PaymentProviderClientInterface } from "src/payment-provider/interfaces/payment-provider-client.interface"
 import { PaymentProviderService } from "src/payment-provider/services/payment-provider.service"
 import { v4 as uuidv4 } from "uuid"
 import { CustomerService } from "./customer.service"
-import { PaymentProviderClientInterface } from "src/payment-provider/interfaces/payment-provider-client.interface"
-import { get } from "http"
 
 describe("CustomerService", () => {
   let service: CustomerService
