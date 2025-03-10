@@ -1,14 +1,15 @@
 import { NestFactory } from "@nestjs/core"
-import { AppModule } from "./app.module"
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger"
-import { ValidationPipe } from "@nestjs/common"
+import { configureApp } from "src/bootstrap/configure-app"
+import { AppModule } from "./app.module"
+import { NestExpressApplication } from "@nestjs/platform-express"
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     rawBody: true,
   })
 
-  app.useGlobalPipes(new ValidationPipe())
+  configureApp(app)
 
   const config = new DocumentBuilder()
     .setTitle("Payflow")

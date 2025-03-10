@@ -1,6 +1,7 @@
 import { ForbiddenException, Injectable } from "@nestjs/common"
 import { EventEmitter2 } from "@nestjs/event-emitter"
 import { CustomerUpdatedEvent } from "src/customer/events/customer-updated.event"
+import { webhooksConstructEvent } from "src/stripe/models/stripe/client/webhooks-construct-event"
 import { StripeAccountRepository } from "src/stripe/repositories/stripe-account.repository"
 import { StripeCustomerRepository } from "src/stripe/repositories/stripe-customer.repository"
 import Stripe from "stripe"
@@ -38,23 +39,21 @@ export class StripeWebhookService {
   async handleWebhook(
     stripeAccountId: string,
     signature: string,
-    rawBody: Buffer<ArrayBufferLike>,
+    rawBody: Buffer,
   ) {
     const stripeAccount =
       await this.stripeAccountRepository.findOneById(stripeAccountId)
     const stripe = new Stripe(stripeAccount.stripeSecretKey)
 
     try {
-      const event = stripe.webhooks.constructEvent(
+      const event = webhooksConstructEvent(
+        stripe,
         rawBody,
         signature,
         stripeAccount.stripeWebhookSecret,
-        3600 * 24,
       )
-
       await this.processEvent(event)
     } catch (error) {
-      console.error(error)
       throw new ForbiddenException("Invalid webhook signature")
     }
   }
