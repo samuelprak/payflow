@@ -8,12 +8,14 @@ import { TenantModule } from "src/tenant/tenant.module"
 import { CustomerController } from "./controllers/customer.controller"
 import { Customer } from "./entities/customer.entity"
 import { CustomerService } from "./services/customer.service"
-import { CheckoutController } from "src/customer/controllers/checkout.controller"
-import { CheckoutService } from "src/customer/services/checkout.service"
+import { CheckoutSessionController } from "src/customer/controllers/checkout-session.controller"
+import { CheckoutSessionService } from "src/customer/services/checkout.service"
 import { BullModule } from "@nestjs/bullmq"
 import { WEBHOOK_QUEUE } from "src/customer/customer.constants"
 import { WebhookProcessor } from "src/customer/processors/webhook.processor"
 import { SendWebhookOnCustomerUpdatedListener } from "src/customer/listeners/send-webhook-on-customer-updated.listener"
+import { PortalSessionController } from "src/customer/controllers/portal-session.controller"
+import { PortalSessionService } from "src/customer/services/portal-session.service"
 
 @Module({
   imports: [
@@ -32,10 +34,15 @@ import { SendWebhookOnCustomerUpdatedListener } from "src/customer/listeners/sen
   providers: [
     CustomerService,
     CustomerRepository,
-    CheckoutService,
+    CheckoutSessionService,
     WebhookProcessor,
     SendWebhookOnCustomerUpdatedListener,
+    PortalSessionService,
   ],
-  controllers: [CustomerController, CheckoutController],
+  controllers: [
+    CustomerController,
+    CheckoutSessionController,
+    PortalSessionController,
+  ],
 })
 export class CustomerModule {}

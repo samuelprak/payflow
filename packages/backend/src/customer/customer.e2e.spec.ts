@@ -92,7 +92,7 @@ describe("Customer", () => {
     const customer = await new CustomerFactory().create({ tenant })
 
     const res = await request(app.getHttpServer())
-      .post(`/customers/${customer.id}/checkout`)
+      .post(`/customers/${customer.id}/checkout-session`)
       .set(asTenant(tenant))
       .send({
         products: [
@@ -115,7 +115,7 @@ describe("Customer", () => {
 
   it("cannot create a checkout session for an non-existing customer", async () => {
     await request(app.getHttpServer())
-      .post(`/customers/${uuidv4()}/checkout`)
+      .post(`/customers/${uuidv4()}/checkout-session`)
       .set(asTenant(tenant))
       .send({
         products: [
@@ -132,7 +132,7 @@ describe("Customer", () => {
     const customer = await new CustomerFactory().create()
 
     await request(app.getHttpServer())
-      .post(`/customers/${customer.id}/checkout`)
+      .post(`/customers/${customer.id}/checkout-session`)
       .set(asTenant(tenant))
       .send({
         products: [
@@ -142,6 +142,39 @@ describe("Customer", () => {
           },
         ],
       })
+      .expect(403)
+  })
+
+  it("creates a portal session", async () => {
+    const customer = await new CustomerFactory().create({ tenant })
+
+    const res = await request(app.getHttpServer())
+      .post(`/customers/${customer.id}/portal-session`)
+      .set(asTenant(tenant))
+      .expect(201)
+
+    expect(res.body).toEqual(
+      expect.objectContaining({
+        data: {
+          portalUrl: "https://example.com/portal",
+        },
+      }),
+    )
+  })
+
+  it("cannot create a portal session for a non-existing customer", async () => {
+    await request(app.getHttpServer())
+      .post(`/customers/${uuidv4()}/portal-session`)
+      .set(asTenant(tenant))
+      .expect(404)
+  })
+
+  it("cannot create a portal session for a customer in another tenant", async () => {
+    const customer = await new CustomerFactory().create()
+
+    await request(app.getHttpServer())
+      .post(`/customers/${customer.id}/portal-session`)
+      .set(asTenant(tenant))
       .expect(403)
   })
 })

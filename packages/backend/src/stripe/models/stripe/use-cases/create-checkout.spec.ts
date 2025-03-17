@@ -1,4 +1,4 @@
-import { CheckoutProduct } from "src/payment-provider/interfaces/checkout-params"
+import { CheckoutSessionProduct } from "src/payment-provider/interfaces/checkout-session-params"
 import { StripeCustomerFactory } from "src/stripe/factories/stripe-customer.factory"
 import Stripe from "stripe"
 import { createCheckoutSession } from "../client/create-checkout-session"
@@ -11,7 +11,7 @@ const createCheckoutSessionMock = createCheckoutSession as jest.Mock
 
 describe("createCheckout", () => {
   const stripe = new Stripe("fake-api-key")
-  const products: CheckoutProduct[] = [
+  const products: CheckoutSessionProduct[] = [
     {
       externalRef: "price_12345",
       quantity: 1,

@@ -1,8 +1,10 @@
 import { UnprocessableEntityException } from "@nestjs/common"
 import { BaseCustomer } from "src/payment-provider/interfaces/base-customer"
-import { CheckoutParams } from "src/payment-provider/interfaces/checkout-params"
+import { CheckoutSessionParams } from "src/payment-provider/interfaces/checkout-session-params"
 import { PaymentProviderClientInterface } from "src/payment-provider/interfaces/payment-provider-client.interface"
+import { PortalSessionParams } from "src/payment-provider/interfaces/portal-session-params"
 import { createCheckout } from "src/stripe/models/stripe/use-cases/create-checkout"
+import { createPortalSession } from "src/stripe/models/stripe/use-cases/create-portal-session"
 import { getSubscriptions } from "src/stripe/models/stripe/use-cases/get-subscriptions"
 import { syncCustomer } from "src/stripe/models/stripe/use-cases/sync-customer"
 import { StripeCustomerRepository } from "src/stripe/repositories/stripe-customer.repository"
@@ -35,19 +37,18 @@ export class StripePaymentProviderClient
     })
   }
 
-  async createCheckout({ customerId, products }: CheckoutParams) {
-    const stripeCustomer =
-      await this.stripeCustomerRepository.findOneByCustomerId(customerId)
-    if (!stripeCustomer) {
-      throw new UnprocessableEntityException(
-        "Stripe customer not found, please sync customer first",
-      )
-    }
+  async createCheckoutSession({ customerId, products }: CheckoutSessionParams) {
+    const stripeCustomer = await this.getStripeCustomer(customerId)
 
-    return createCheckout({
+    return createCheckout({ stripe: this.stripe, products, stripeCustomer })
+  }
+
+  async createPortalSession({ customerId }: PortalSessionParams) {
+    const stripeCustomer = await this.getStripeCustomer(customerId)
+
+    return createPortalSession({
       stripe: this.stripe,
-      products,
-      stripeCustomer,
+      stripeCustomerId: stripeCustomer.stripeCustomerId,
     })
   }
 
@@ -60,5 +61,17 @@ export class StripePaymentProviderClient
       stripe: this.stripe,
       stripeCutomerId: stripeCustomer.stripeCustomerId,
     })
+  }
+
+  private async getStripeCustomer(customerId: string) {
+    const stripeCustomer =
+      await this.stripeCustomerRepository.findOneByCustomerId(customerId)
+    if (!stripeCustomer) {
+      throw new UnprocessableEntityException(
+        "Stripe customer not found, please sync customer first",
+      )
+    }
+
+    return stripeCustomer
   }
 }

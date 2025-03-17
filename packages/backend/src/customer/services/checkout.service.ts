@@ -4,21 +4,25 @@ import { CreateCheckoutDto } from "src/customer/models/dto/create-checkout.dto"
 import { PaymentProviderService } from "src/payment-provider/services/payment-provider.service"
 import { Tenant } from "src/tenant/entities/tenant.entity"
 
-type CreateCheckoutParams = {
+type CreateCheckoutSessionParams = {
   tenant: Tenant
   customer: Customer
   params: CreateCheckoutDto
 }
 
 @Injectable()
-export class CheckoutService {
+export class CheckoutSessionService {
   constructor(
     private readonly paymentProviderService: PaymentProviderService,
   ) {}
 
-  async createCheckout({ tenant, customer, params }: CreateCheckoutParams) {
+  async createCheckoutSession({
+    tenant,
+    customer,
+    params,
+  }: CreateCheckoutSessionParams) {
     const client = await this.paymentProviderService.forTenant(tenant.id)
-    return client.createCheckout({
+    return client.createCheckoutSession({
       customerId: customer.id,
       products: params.products,
     })

@@ -1,13 +1,13 @@
 import { createCheckoutSession } from "./create-checkout-session"
 import Stripe from "stripe"
 import { BadRequestException } from "@nestjs/common"
-import { CheckoutProduct } from "src/payment-provider/interfaces/checkout-params"
+import { CheckoutSessionProduct } from "src/payment-provider/interfaces/checkout-session-params"
 
 jest.mock("stripe")
 
 describe("createCheckoutSession", () => {
   let stripe: jest.Mocked<Stripe>
-  let products: CheckoutProduct[]
+  let products: CheckoutSessionProduct[]
   let stripeCustomerId: string
 
   beforeEach(() => {
@@ -61,6 +61,8 @@ describe("createCheckoutSession", () => {
         quantity: 1,
       })),
       allow_promotion_codes: true,
+      automatic_tax: { enabled: true },
+      customer_update: { address: "auto" },
     })
     expect(response).toEqual(mockSession)
   })
@@ -94,6 +96,8 @@ describe("createCheckoutSession", () => {
         quantity: 1,
       })),
       allow_promotion_codes: true,
+      automatic_tax: { enabled: true },
+      customer_update: { address: "auto" },
     })
     expect(response).toEqual(mockSession)
   })

@@ -1,12 +1,12 @@
-import { Checkout } from "src/payment-provider/interfaces/checkout"
-import { CheckoutProduct } from "src/payment-provider/interfaces/checkout-params"
+import { CheckoutSession } from "src/payment-provider/interfaces/checkout-session"
+import { CheckoutSessionProduct } from "src/payment-provider/interfaces/checkout-session-params"
 import { StripeCustomer } from "src/stripe/entities/stripe-customer.entity"
 import { createCheckoutSession } from "src/stripe/models/stripe/client/create-checkout-session"
 import Stripe from "stripe"
 
 type Params = {
   stripe: Stripe
-  products: CheckoutProduct[]
+  products: CheckoutSessionProduct[]
   stripeCustomer: StripeCustomer
 }
 
@@ -14,7 +14,7 @@ export async function createCheckout({
   stripe,
   products,
   stripeCustomer,
-}: Params): Promise<Checkout> {
+}: Params): Promise<CheckoutSession> {
   const checkout = await createCheckoutSession({
     stripe,
     products,

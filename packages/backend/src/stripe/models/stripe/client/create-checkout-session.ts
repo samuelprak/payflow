@@ -1,10 +1,10 @@
 import { BadRequestException } from "@nestjs/common"
-import { CheckoutProduct } from "src/payment-provider/interfaces/checkout-params"
+import { CheckoutSessionProduct } from "src/payment-provider/interfaces/checkout-session-params"
 import Stripe from "stripe"
 
 type Params = {
   stripe: Stripe
-  products: CheckoutProduct[]
+  products: CheckoutSessionProduct[]
   stripeCustomerId: string
 }
 
@@ -31,5 +31,9 @@ export async function createCheckoutSession({
       quantity: 1,
     })),
     allow_promotion_codes: true,
+    automatic_tax: { enabled: true },
+    customer_update: {
+      address: "auto",
+    },
   })
 }

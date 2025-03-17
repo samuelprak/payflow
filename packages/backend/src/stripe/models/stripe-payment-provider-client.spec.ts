@@ -1,4 +1,4 @@
-import { CheckoutProduct } from "src/payment-provider/interfaces/checkout-params"
+import { CheckoutSessionProduct } from "src/payment-provider/interfaces/checkout-session-params"
 import { StripeCustomerFactory } from "src/stripe/factories/stripe-customer.factory"
 import { StripePaymentProviderClient } from "src/stripe/models/stripe-payment-provider-client"
 import { createCheckout } from "src/stripe/models/stripe/use-cases/create-checkout"
@@ -56,7 +56,7 @@ describe("StripePaymentProviderClient", () => {
       jest
         .spyOn(stripeCustomerRepository, "findOneByCustomerId")
         .mockResolvedValue(stripeCustomer)
-      const products: CheckoutProduct[] = [
+      const products: CheckoutSessionProduct[] = [
         {
           externalRef: "price_12345",
           quantity: 1,
@@ -67,7 +67,7 @@ describe("StripePaymentProviderClient", () => {
         checkoutUrl: "https://checkout.url",
       })
 
-      const result = await client.createCheckout({
+      const result = await client.createCheckoutSession({
         customerId: "customer123",
         products,
       })
@@ -86,7 +86,10 @@ describe("StripePaymentProviderClient", () => {
         .mockResolvedValue(null)
 
       await expect(
-        client.createCheckout({ customerId: "customer123", products: [] }),
+        client.createCheckoutSession({
+          customerId: "customer123",
+          products: [],
+        }),
       ).rejects.toThrow("Stripe customer not found, please sync customer first")
     })
   })
