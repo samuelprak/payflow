@@ -12,6 +12,7 @@ import { CustomerModule } from "./customer/customer.module"
 import { TenantModule } from "./tenant/tenant.module"
 import { BullModule } from "@nestjs/bullmq"
 import { EventEmitterModule } from "@nestjs/event-emitter"
+import { HealthModule } from "./health/health.module"
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { EventEmitterModule } from "@nestjs/event-emitter"
     TenantModule,
     StripeModule,
     PaymentProviderModule,
+    HealthModule,
   ],
 })
 export class AppModule {}
