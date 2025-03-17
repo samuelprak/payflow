@@ -21,5 +21,5 @@ ingress:
   hosts:
     - host: payflow.lyrolab.fr
       paths:
-        - path: /api
-          pathType: Prefix
+        - path: /api(/|$)(.*)
+          pathType: ImplementationSpecific
