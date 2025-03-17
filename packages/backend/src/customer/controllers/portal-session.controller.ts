@@ -7,6 +7,7 @@ import {
   Req,
   UseGuards,
 } from "@nestjs/common"
+import { ApiParam } from "@nestjs/swagger"
 import {
   AccessGuard,
   Actions,
@@ -26,9 +27,17 @@ import { TenantGuard } from "src/tenant/guards/tenant.guard"
 export class PortalSessionController {
   constructor(private readonly service: PortalSessionService) {}
 
+  /**
+   * Creates a portal session for a customer.
+   */
   @Post()
   @UseGuards(AccessGuard)
   @UseAbility(Actions.manage, Customer, CustomerHook)
+  @ApiParam({
+    name: "customerId",
+    type: String,
+    description: "The ID of the customer to create the portal session for.",
+  })
   async createPortalSession(
     @Param("customerId", new ParseUUIDPipe()) customerId: string,
     @Req() request: CustomRequest,

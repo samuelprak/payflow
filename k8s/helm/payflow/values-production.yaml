@@ -1,0 +1,25 @@
+# Production specific values
+nameOverride: "payflow"
+fullnameOverride: "payflow"
+
+replicaCount: 2
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+
+ingress:
+  hosts:
+    - host: payflow.lyrolab.fr
+      paths:
+        - path: /api(/|$)(.*)
+          pathType: Prefix

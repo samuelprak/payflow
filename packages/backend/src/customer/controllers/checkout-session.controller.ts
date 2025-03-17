@@ -7,6 +7,7 @@ import {
   Req,
   UseGuards,
 } from "@nestjs/common"
+import { ApiParam } from "@nestjs/swagger"
 import {
   AccessGuard,
   Actions,
@@ -27,10 +28,18 @@ import { TenantGuard } from "src/tenant/guards/tenant.guard"
 export class CheckoutSessionController {
   constructor(private readonly service: CheckoutSessionService) {}
 
+  /**
+   * Creates a checkout session for a customer.
+   */
   @Post()
   @UseGuards(AccessGuard)
   @UseAbility(Actions.manage, Customer, CustomerHook)
-  async createCheckout(
+  @ApiParam({
+    name: "customerId",
+    type: String,
+    description: "The ID of the customer to create the checkout session for.",
+  })
+  async createCheckoutSession(
     @Param("customerId", new ParseUUIDPipe()) customerId: string,
     @Body() body: CreateCheckoutDto,
     @Req() request: CustomRequest,
@@ -39,12 +48,12 @@ export class CheckoutSessionController {
     const customer = await subjectProxy.get()
     if (!customer) throw new Error()
 
-    const checkout = await this.service.createCheckoutSession({
+    const checkoutSession = await this.service.createCheckoutSession({
       tenant: request.tenant,
       customer,
       params: body,
     })
 
-    return { data: checkout }
+    return { data: checkoutSession }
   }
 }

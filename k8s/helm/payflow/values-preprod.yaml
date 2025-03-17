@@ -1,0 +1,10 @@
+# Preprod specific values
+nameOverride: "payflow"
+fullnameOverride: "payflow"
+
+ingress:
+  hosts:
+    - host: payflow-preprod.lyrolab.fr
+      paths:
+        - path: /api(/|$)(.*)
+          pathType: Prefix

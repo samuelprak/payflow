@@ -1,4 +1,5 @@
 import { Body, Controller, Post, Req, UseGuards } from "@nestjs/common"
+import { ApiOperation } from "@nestjs/swagger"
 import { SyncCustomerRepDto } from "src/customer/models/dto/sync-customer-rep.dto"
 import { SyncCustomerDto } from "src/customer/models/dto/sync-customer.dto"
 import { CustomerService } from "src/customer/services/customer.service"
@@ -10,6 +11,12 @@ import { TenantGuard } from "src/tenant/guards/tenant.guard"
 export class CustomerController {
   constructor(private readonly customerService: CustomerService) {}
 
+  /**
+   * Syncs a customer.
+   */
+  @ApiOperation({
+    description: "This endpoint creates or updates a customer in the database.",
+  })
   @Post("sync")
   async syncCustomer(
     @Body() body: SyncCustomerDto,
