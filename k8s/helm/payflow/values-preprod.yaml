@@ -6,5 +6,5 @@ ingress:
   hosts:
     - host: payflow-preprod.lyrolab.fr
       paths:
-        - path: /api(/|$)(.*)
+        - path: /api
           pathType: Prefix

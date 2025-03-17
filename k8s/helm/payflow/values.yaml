@@ -2,7 +2,7 @@
 replicaCount: 1
 
 image:
-  repository: payflow
+  repository: ghcr.io/samuelprak/payflow-backend
   tag: latest
   pullPolicy: IfNotPresent
 
