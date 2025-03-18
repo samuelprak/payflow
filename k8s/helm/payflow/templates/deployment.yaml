@@ -16,6 +16,16 @@ spec:
       labels:
         {{- include "payflow.selectorLabels" . | nindent 8 }}
     spec:
+      initContainers:
+        - name: run-migrations
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["npm", "run", "db:migrate"]
+          env:
+            - name: PGSSLMODE
+              value: no-verify
+          envFrom:
+            {{- toYaml .Values.envFrom | nindent 12 }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
