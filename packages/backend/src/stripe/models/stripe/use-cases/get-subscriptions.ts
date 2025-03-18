@@ -20,26 +20,31 @@ export async function getSubscriptions({
     RUNNING_SUBSCRIPTION_STATUSES.includes(status),
   )
 
-  return runningSubscriptions.map(
-    ({
+  return runningSubscriptions.map((subscription) => {
+    const {
       id,
       items,
       status,
       current_period_start,
       current_period_end,
       default_payment_method,
-    }) => {
-      return {
-        shouldProvideProduct: SHOULD_PROVIDE_PRODUCT_STATUSES.includes(status),
-        hasPastDueSubscription: status === "past_due",
-        externalRef: id,
-        productExternalRef: items.data[0].price.id,
-        currentPeriodStart: new Date(current_period_start * 1000),
-        currentPeriodEnd: new Date(current_period_end * 1000),
-        paymentMethod: extractPaymentMethod(default_payment_method),
-      }
-    },
-  )
+    } = subscription
+
+    const price = items.data[0].price
+
+    return {
+      shouldProvideProduct: SHOULD_PROVIDE_PRODUCT_STATUSES.includes(status),
+      hasPastDueSubscription: status === "past_due",
+      externalRef: id,
+      productExternalRef: items.data[0].price.id,
+      currentPeriodStart: new Date(current_period_start * 1000),
+      currentPeriodEnd: new Date(current_period_end * 1000),
+      cancelAtPeriodEnd: subscription.cancel_at_period_end,
+      paymentMethod: extractPaymentMethod(default_payment_method),
+      ...(price.unit_amount !== null && { amount: price.unit_amount }),
+      currency: price.currency,
+    }
+  })
 }
 
 function extractPaymentMethod(

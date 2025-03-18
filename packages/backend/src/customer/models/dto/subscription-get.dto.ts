@@ -8,4 +8,7 @@ export class SubscriptionGet {
   currentPeriodStart: Date
   currentPeriodEnd: Date
   paymentMethod?: PaymentMethodGet
+  cancelAtPeriodEnd: boolean
+  amount?: number
+  currency: string
 }

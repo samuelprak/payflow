@@ -18,6 +18,7 @@ describe("getSubscriptions", () => {
         status: "active",
         current_period_start: 1633046400,
         current_period_end: 1635724800,
+        cancel_at_period_end: false,
         default_payment_method: {
           card: {
             brand: "visa",
@@ -27,7 +28,11 @@ describe("getSubscriptions", () => {
           },
         },
         items: {
-          data: [{ price: { id: "price_123" } }],
+          data: [
+            {
+              price: { id: "price_123", unit_amount: 1000, currency: "usd" },
+            },
+          ],
         },
       },
     ])
@@ -46,11 +51,14 @@ describe("getSubscriptions", () => {
         productExternalRef: "price_123",
         currentPeriodStart: new Date(1633046400 * 1000),
         currentPeriodEnd: new Date(1635724800 * 1000),
+        cancelAtPeriodEnd: false,
         paymentMethod: {
           brand: "visa",
           last_digits: "4242",
           expiry: "12/2023",
         },
+        amount: 1000,
+        currency: "usd",
       },
     ])
   })
@@ -63,8 +71,13 @@ describe("getSubscriptions", () => {
         current_period_start: 1633046400,
         current_period_end: 1635724800,
         default_payment_method: null,
+        cancel_at_period_end: false,
         items: {
-          data: [{ price: { id: "price_123" } }],
+          data: [
+            {
+              price: { id: "price_123", unit_amount: 1000, currency: "usd" },
+            },
+          ],
         },
       },
     ])
@@ -86,8 +99,13 @@ describe("getSubscriptions", () => {
         current_period_start: 1633046400,
         current_period_end: 1635724800,
         default_payment_method: null,
+        cancel_at_period_end: false,
         items: {
-          data: [{ price: { id: "price_123" } }],
+          data: [
+            {
+              price: { id: "price_123", unit_amount: 1000, currency: "usd" },
+            },
+          ],
         },
       },
     ])
@@ -107,6 +125,9 @@ describe("getSubscriptions", () => {
         currentPeriodStart: new Date(1633046400 * 1000),
         currentPeriodEnd: new Date(1635724800 * 1000),
         paymentMethod: undefined,
+        amount: 1000,
+        currency: "usd",
+        cancelAtPeriodEnd: false,
       },
     ])
   })
@@ -118,6 +139,7 @@ describe("getSubscriptions", () => {
         status: "past_due",
         current_period_start: 1633046400,
         current_period_end: 1635724800,
+        cancel_at_period_end: false,
         default_payment_method: {
           card: {
             brand: "visa",
@@ -127,7 +149,11 @@ describe("getSubscriptions", () => {
           },
         },
         items: {
-          data: [{ price: { id: "price_123" } }],
+          data: [
+            {
+              price: { id: "price_123", unit_amount: 1000, currency: "usd" },
+            },
+          ],
         },
       },
     ])
@@ -151,6 +177,9 @@ describe("getSubscriptions", () => {
           last_digits: "4242",
           expiry: "12/2023",
         },
+        amount: 1000,
+        currency: "usd",
+        cancelAtPeriodEnd: false,
       },
     ])
   })
