@@ -5,11 +5,9 @@ import { SyncCustomerDto } from "src/customer/models/dto/sync-customer.dto"
 import { CustomerService } from "src/customer/services/customer.service"
 import { CustomRequest } from "src/request"
 import { TenantGuard } from "src/tenant/guards/tenant.guard"
-import { ApiTenantHeader } from "src/tenant/decorators/api-tenant-header"
 
 @Controller("customers")
 @UseGuards(TenantGuard)
-@ApiTenantHeader()
 @ApiTags("Customer")
 export class CustomerController {
   constructor(private readonly customerService: CustomerService) {}

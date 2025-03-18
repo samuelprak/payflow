@@ -15,6 +15,7 @@ async function bootstrap() {
     .setTitle("Payflow")
     .setDescription("Payflow API")
     .setVersion("1.0")
+    .addApiKey({ type: "apiKey", name: "x-api-key", in: "header" })
     .build()
 
   const documentFactory = () => SwaggerModule.createDocument(app, config)

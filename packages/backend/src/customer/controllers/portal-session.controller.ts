@@ -1,5 +1,4 @@
 import {
-  Body,
   Controller,
   Param,
   ParseUUIDPipe,
@@ -20,13 +19,11 @@ import { CreatePortalSessionRepDto } from "src/customer/models/dto/create-portal
 import { CustomerHook } from "src/customer/permissions/customer.hook"
 import { PortalSessionService } from "src/customer/services/portal-session.service"
 import { CustomRequest } from "src/request"
-import { ApiTenantHeader } from "src/tenant/decorators/api-tenant-header"
 import { TenantGuard } from "src/tenant/guards/tenant.guard"
 
 @Controller("customers/:customerId/portal-session")
 @UseGuards(TenantGuard)
 @ApiTags("Customer")
-@ApiTenantHeader()
 export class PortalSessionController {
   constructor(private readonly service: PortalSessionService) {}
 

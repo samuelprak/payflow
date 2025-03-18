@@ -7,7 +7,7 @@ import {
   Req,
   UseGuards,
 } from "@nestjs/common"
-import { ApiHeader, ApiParam, ApiTags } from "@nestjs/swagger"
+import { ApiParam, ApiTags } from "@nestjs/swagger"
 import {
   AccessGuard,
   Actions,
@@ -21,12 +21,10 @@ import { CreateCheckoutDto } from "src/customer/models/dto/create-checkout.dto"
 import { CustomerHook } from "src/customer/permissions/customer.hook"
 import { CheckoutSessionService } from "src/customer/services/checkout.service"
 import { CustomRequest } from "src/request"
-import { ApiTenantHeader } from "src/tenant/decorators/api-tenant-header"
 import { TenantGuard } from "src/tenant/guards/tenant.guard"
 
 @Controller("customers/:customerId/checkout-session")
 @UseGuards(TenantGuard)
-@ApiTenantHeader()
 @ApiTags("Customer")
 export class CheckoutSessionController {
   constructor(private readonly service: CheckoutSessionService) {}
