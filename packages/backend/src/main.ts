@@ -3,6 +3,7 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger"
 import { configureApp } from "src/bootstrap/configure-app"
 import { AppModule } from "./app.module"
 import { NestExpressApplication } from "@nestjs/platform-express"
+import { WebhookEvent } from "src/customer/models/dto/webhook-event.dto"
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -18,7 +19,8 @@ async function bootstrap() {
     .addApiKey({ type: "apiKey", name: "x-api-key", in: "header" })
     .build()
 
-  const documentFactory = () => SwaggerModule.createDocument(app, config)
+  const documentFactory = () =>
+    SwaggerModule.createDocument(app, config, { extraModels: [WebhookEvent] })
   SwaggerModule.setup("api", app, documentFactory)
 
   app.enableShutdownHooks()
