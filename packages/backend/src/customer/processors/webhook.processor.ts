@@ -8,6 +8,7 @@ import {
 import { CustomerUpdatedEvent } from "src/customer/events/customer-updated.event"
 import { CustomerGet } from "src/customer/models/dto/customer-get.dto"
 import { CustomerUpdatedWebhookEvent } from "src/customer/models/dto/customer-updated-webhook-event.dto"
+import { WebhookEvent } from "src/customer/models/dto/webhook-event.dto"
 import { CustomerRepository } from "src/customer/repositories/customer.repository"
 import { PaymentProviderService } from "src/payment-provider/services/payment-provider.service"
 
@@ -38,9 +39,11 @@ export class WebhookProcessor extends WorkerHost {
     )
     const subscriptions = await client.getSubscriptions(customer.id)
     const customerGet = CustomerGet.fromEntity(customer, subscriptions)
-    const event: CustomerUpdatedWebhookEvent = {
-      type: "customer.updated",
-      customer: customerGet,
+    const event: WebhookEvent = {
+      data: {
+        type: "customer.updated",
+        customer: customerGet,
+      },
     }
     const tenantWebhookUrl = customer.tenant.webhookUrl
 
