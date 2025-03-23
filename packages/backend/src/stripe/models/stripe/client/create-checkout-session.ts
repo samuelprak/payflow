@@ -6,12 +6,16 @@ type Params = {
   stripe: Stripe
   products: CheckoutSessionProduct[]
   stripeCustomerId: string
+  successUrl?: string
+  cancelUrl?: string
 }
 
 export async function createCheckoutSession({
   stripe,
   products,
   stripeCustomerId,
+  successUrl,
+  cancelUrl,
 }: Params) {
   const priceIds = products.map((product) => product.externalRef)
   const prices = await Promise.all(
@@ -24,7 +28,8 @@ export async function createCheckoutSession({
 
   return stripe.checkout.sessions.create({
     customer: stripeCustomerId,
-    success_url: "https://example.com/success",
+    success_url: successUrl,
+    cancel_url: cancelUrl,
     mode: recurringMode ? "subscription" : "payment",
     line_items: prices.map((price) => ({
       price: price.id,

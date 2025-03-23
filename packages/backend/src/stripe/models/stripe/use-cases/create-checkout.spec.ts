@@ -22,12 +22,20 @@ describe("createCheckout", () => {
     const stripeCustomer = await new StripeCustomerFactory().make()
     createCheckoutSessionMock.mockResolvedValue({ url: "https://checkout.url" })
 
-    const result = await createCheckout({ stripe, products, stripeCustomer })
+    const result = await createCheckout({
+      stripe,
+      products,
+      stripeCustomer,
+      successUrl: "https://example.com/success",
+      cancelUrl: "https://example.com/cancel",
+    })
 
     expect(createCheckoutSessionMock).toHaveBeenCalledWith({
       stripe,
       products,
       stripeCustomerId: stripeCustomer.stripeCustomerId,
+      successUrl: "https://example.com/success",
+      cancelUrl: "https://example.com/cancel",
     })
     expect(result).toEqual({ checkoutUrl: "https://checkout.url" })
   })
@@ -37,7 +45,13 @@ describe("createCheckout", () => {
     createCheckoutSessionMock.mockResolvedValue({ url: null })
 
     await expect(
-      createCheckout({ stripe, products, stripeCustomer }),
+      createCheckout({
+        stripe,
+        products,
+        stripeCustomer,
+        successUrl: "https://example.com/success",
+        cancelUrl: "https://example.com/cancel",
+      }),
     ).rejects.toThrow("Failed to create checkout session")
   })
 })

@@ -70,12 +70,16 @@ describe("StripePaymentProviderClient", () => {
       const result = await client.createCheckoutSession({
         customerId: "customer123",
         products,
+        successUrl: "https://example.com/success",
+        cancelUrl: "https://example.com/cancel",
       })
 
       expect(createCheckoutMock).toHaveBeenCalledWith({
         stripe: expect.any(Stripe),
         products,
         stripeCustomer,
+        successUrl: "https://example.com/success",
+        cancelUrl: "https://example.com/cancel",
       })
       expect(result).toEqual({ checkoutUrl: "https://checkout.url" })
     })
@@ -89,6 +93,8 @@ describe("StripePaymentProviderClient", () => {
         client.createCheckoutSession({
           customerId: "customer123",
           products: [],
+          successUrl: "https://example.com/success",
+          cancelUrl: "https://example.com/cancel",
         }),
       ).rejects.toThrow("Stripe customer not found, please sync customer first")
     })

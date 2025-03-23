@@ -46,6 +46,8 @@ describe("createCheckoutSession", () => {
       stripe,
       products,
       stripeCustomerId,
+      successUrl: "https://example.com/success",
+      cancelUrl: "https://example.com/cancel",
     })
 
     expect(stripe.prices.retrieve).toHaveBeenCalledTimes(products.length)
@@ -55,6 +57,7 @@ describe("createCheckoutSession", () => {
     expect(stripe.checkout.sessions.create).toHaveBeenCalledWith({
       customer: stripeCustomerId,
       success_url: "https://example.com/success",
+      cancel_url: "https://example.com/cancel",
       mode: "payment",
       line_items: mockPrices.map((price) => ({
         price: price.id,
@@ -85,11 +88,14 @@ describe("createCheckoutSession", () => {
       stripe,
       products,
       stripeCustomerId,
+      successUrl: "https://example.com/success",
+      cancelUrl: "https://example.com/cancel",
     })
 
     expect(stripe.checkout.sessions.create).toHaveBeenCalledWith({
       customer: stripeCustomerId,
       success_url: "https://example.com/success",
+      cancel_url: "https://example.com/cancel",
       mode: "subscription",
       line_items: mockPrices.map((price) => ({
         price: price.id,
@@ -112,6 +118,8 @@ describe("createCheckoutSession", () => {
         stripe,
         products,
         stripeCustomerId,
+        successUrl: "https://example.com/success",
+        cancelUrl: "https://example.com/cancel",
       }),
     ).rejects.toThrow(BadRequestException)
   })

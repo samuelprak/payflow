@@ -37,10 +37,21 @@ export class StripePaymentProviderClient
     })
   }
 
-  async createCheckoutSession({ customerId, products }: CheckoutSessionParams) {
+  async createCheckoutSession({
+    customerId,
+    products,
+    successUrl,
+    cancelUrl,
+  }: CheckoutSessionParams) {
     const stripeCustomer = await this.getStripeCustomer(customerId)
 
-    return createCheckout({ stripe: this.stripe, products, stripeCustomer })
+    return createCheckout({
+      stripe: this.stripe,
+      products,
+      stripeCustomer,
+      successUrl,
+      cancelUrl,
+    })
   }
 
   async createPortalSession({ customerId }: PortalSessionParams) {

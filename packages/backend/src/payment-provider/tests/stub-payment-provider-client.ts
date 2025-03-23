@@ -1,12 +1,12 @@
 import { SubscriptionGet } from "src/customer/models/dto/subscription-get.dto"
-import { CheckoutSession } from "src/payment-provider/interfaces/checkout-session"
+import { BaseCheckoutSession } from "src/payment-provider/interfaces/base-checkout-session"
 import { PaymentProviderClientInterface } from "src/payment-provider/interfaces/payment-provider-client.interface"
 import { PortalSession } from "src/payment-provider/interfaces/portal-session"
 
 export class StubPaymentProviderClient
   implements PaymentProviderClientInterface
 {
-  createCheckoutSession(): Promise<CheckoutSession> {
+  createCheckoutSession(): Promise<BaseCheckoutSession> {
     return Promise.resolve({ checkoutUrl: "https://example.com/checkout" })
   }
 

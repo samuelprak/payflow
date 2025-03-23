@@ -7,7 +7,6 @@ import { PaymentProviderClientInterface } from "src/payment-provider/interfaces/
 import { PaymentProviderService } from "../../payment-provider/services/payment-provider.service"
 import { SEND_WEBHOOK_JOB } from "../customer.constants"
 import { CustomerUpdatedEvent } from "../events/customer-updated.event"
-import { CustomerGet } from "../models/dto/customer-get.dto"
 import { CustomerRepository } from "../repositories/customer.repository"
 import { WebhookProcessor } from "./webhook.processor"
 
@@ -84,10 +83,12 @@ describe("WebhookProcessor", () => {
       expect(mockClient.getSubscriptions).toHaveBeenCalledWith(customer.id)
       expect(mockedAxios.post).toHaveBeenCalledWith(
         customer.tenant.webhookUrl,
-        expect.objectContaining({
-          type: "customer.updated",
-          customer: expect.anything(),
-        }),
+        {
+          data: expect.objectContaining({
+            type: "customer.updated",
+            customer: expect.anything(),
+          }),
+        },
       )
     })
 
