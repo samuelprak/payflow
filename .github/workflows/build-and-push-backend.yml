@@ -62,3 +62,30 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy on Preprod
+    needs: [build-and-push]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout main
+      uses: actions/checkout@v2
+
+    - name: Preprod - Set Kubernetes context
+      uses: azure/k8s-set-context@v2
+      with:
+        method: kubeconfig
+        kubeconfig: ${{ secrets.KUBECONFIG_PREPROD }}
+
+    - name: Deploy
+      run: |
+        kubectl apply -f ./k8s/secrets/sealed-payflow-preprod-secrets.yaml
+        helm upgrade --install payflow ./k8s/helm/payflow \
+          --namespace payflow-preprod \
+          --values k8s/helm/payflow/values.yaml \
+          --values k8s/helm/payflow/values-preprod.yaml \
+          --set image.tag=sha-${{ github.sha }}
+        kubectl rollout restart deployment payflow -n payflow-preprod
+        kubectl rollout status deployment payflow -n payflow-preprod
