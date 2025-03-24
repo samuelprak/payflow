@@ -1,8 +1,8 @@
 import { SubscriptionGet } from "src/customer/models/dto/subscription-get.dto"
-import { BaseCustomer } from "src/payment-provider/interfaces/base-customer"
 import { BaseCheckoutSession } from "src/payment-provider/interfaces/base-checkout-session"
+import { BaseCustomer } from "src/payment-provider/interfaces/base-customer"
+import { BasePortalSession } from "src/payment-provider/interfaces/base-portal-session"
 import { CheckoutSessionParams } from "src/payment-provider/interfaces/checkout-session-params"
-import { PortalSession } from "src/payment-provider/interfaces/portal-session"
 import { PortalSessionParams } from "src/payment-provider/interfaces/portal-session-params"
 
 export interface PaymentProviderClientInterface {
@@ -10,6 +10,6 @@ export interface PaymentProviderClientInterface {
   createCheckoutSession(
     params: CheckoutSessionParams,
   ): Promise<BaseCheckoutSession>
-  createPortalSession(params: PortalSessionParams): Promise<PortalSession>
+  createPortalSession(params: PortalSessionParams): Promise<BasePortalSession>
   getSubscriptions(customerId: string): Promise<SubscriptionGet[]>
 }

@@ -19,10 +19,13 @@ import { CheckoutSessionRepository } from "src/customer/repositories/checkout-se
 import { CheckoutSession } from "src/customer/entities/checkout-session.entity"
 import { CheckoutSessionService } from "src/customer/services/checkout-session.service"
 import { CheckoutController } from "src/customer/controllers/checkout.controller"
+import { PortalController } from "src/customer/controllers/portal.controller"
+import { PortalSession } from "src/customer/entities/portal-session.entity"
+import { PortalSessionRepository } from "src/customer/repositories/portal-session.repository"
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Customer, CheckoutSession]),
+    TypeOrmModule.forFeature([Customer, CheckoutSession, PortalSession]),
     CaslModule.forFeature({ permissions: customerPermissions }),
     TenantModule,
     PaymentProviderModule,
@@ -42,12 +45,14 @@ import { CheckoutController } from "src/customer/controllers/checkout.controller
     SendWebhookOnCustomerUpdatedListener,
     PortalSessionService,
     CheckoutSessionRepository,
+    PortalSessionRepository,
   ],
   controllers: [
     CustomerController,
     CheckoutSessionController,
     PortalSessionController,
     CheckoutController,
+    PortalController,
   ],
 })
 export class CustomerModule {}

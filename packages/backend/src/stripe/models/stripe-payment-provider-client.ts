@@ -54,12 +54,13 @@ export class StripePaymentProviderClient
     })
   }
 
-  async createPortalSession({ customerId }: PortalSessionParams) {
+  async createPortalSession({ customerId, returnUrl }: PortalSessionParams) {
     const stripeCustomer = await this.getStripeCustomer(customerId)
 
     return createPortalSession({
       stripe: this.stripe,
       stripeCustomerId: stripeCustomer.stripeCustomerId,
+      returnUrl,
     })
   }
 

@@ -32,7 +32,7 @@ export class CheckoutSessionController {
   ) {}
 
   /**
-   * Creates a checkout configuration for a customer.
+   * Creates a checkout session for a customer.
    */
   @Post()
   @UseGuards(AccessGuard)
@@ -40,8 +40,7 @@ export class CheckoutSessionController {
   @ApiParam({
     name: "customerId",
     type: String,
-    description:
-      "The ID of the customer to create the checkout configuration for.",
+    description: "The ID of the customer to create the checkout session for.",
   })
   async createCheckoutSession(
     @Param("customerId", new ParseUUIDPipe()) customerId: string,

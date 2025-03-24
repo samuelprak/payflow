@@ -18,8 +18,14 @@ describe("createPortalSession", () => {
     const result = await createPortalSession({
       stripe,
       stripeCustomerId: "123",
+      returnUrl: "https://example.com/account",
     })
 
+    expect(createBillingPortalSessionMock).toHaveBeenCalledWith({
+      stripe,
+      stripeCustomerId: "123",
+      returnUrl: "https://example.com/account",
+    })
     expect(result).toEqual({ portalUrl: "https://example.com/portal" })
   })
 })

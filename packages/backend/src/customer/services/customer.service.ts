@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common"
+import { Injectable, NotFoundException } from "@nestjs/common"
 import { CustomerGet } from "src/customer/models/dto/customer-get.dto"
 import { CustomerRepository } from "src/customer/repositories/customer.repository"
 import { PaymentProviderService } from "src/payment-provider/services/payment-provider.service"
@@ -25,5 +25,19 @@ export class CustomerService {
     const subscriptions = await client.getSubscriptions(customer.id)
 
     return CustomerGet.fromEntity(customer, subscriptions)
+  }
+
+  async findById(id: string) {
+    return this.repository.findOneWithTenant(id)
+  }
+
+  async findByIdOrFail(id: string) {
+    const customer = await this.findById(id)
+
+    if (!customer) {
+      throw new NotFoundException(`Customer with id ${id} not found`)
+    }
+
+    return customer
   }
 }

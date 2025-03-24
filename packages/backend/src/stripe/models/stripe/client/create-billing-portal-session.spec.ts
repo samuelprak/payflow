@@ -20,8 +20,13 @@ describe("createBillingPortalSession", () => {
     const session = await createBillingPortalSession({
       stripe,
       stripeCustomerId,
+      returnUrl: "https://example.com/account",
     })
 
+    expect(stripe.billingPortal.sessions.create).toHaveBeenCalledWith({
+      customer: stripeCustomerId,
+      return_url: "https://example.com/account",
+    })
     expect(session).toEqual({
       url: "https://example.com/portal",
     })
