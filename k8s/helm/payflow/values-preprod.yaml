@@ -2,7 +2,7 @@
 nameOverride: "payflow"
 fullnameOverride: "payflow"
 
-serverUrl: "https://payflow-preprod.lyrolab.fr"
+serverUrl: "https://payflow-preprod.lyrolab.fr/api"
 
 ingress:
   hosts:

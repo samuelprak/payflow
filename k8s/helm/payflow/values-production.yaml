@@ -2,7 +2,7 @@
 nameOverride: "payflow"
 fullnameOverride: "payflow"
 
-serverUrl: "https://payflow.lyrolab.fr"
+serverUrl: "https://payflow.lyrolab.fr/api"
 
 replicaCount: 2
 
