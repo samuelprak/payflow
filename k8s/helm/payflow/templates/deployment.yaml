@@ -49,6 +49,8 @@ spec:
           env:
             - name: PGSSLMODE
               value: no-verify
+            - name: SERVER_URL
+              value: {{ .Values.serverUrl }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           envFrom:
