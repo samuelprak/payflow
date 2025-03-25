@@ -7,6 +7,7 @@ on:
       - develop
     paths:
       - 'packages/backend/**'
+      - 'k8s/**'
       - '.github/workflows/build-and-push-backend.yml'
   release:
     types: [published]
