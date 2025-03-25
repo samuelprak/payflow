@@ -61,9 +61,11 @@ describe("PortalSessionController", () => {
       .expect(201)
 
     expect(res.body).toEqual({
-      portalUrl: expect.stringMatching(
-        new RegExp(`https://example.com/portal/.+`),
-      ),
+      data: {
+        portalUrl: expect.stringMatching(
+          new RegExp(`https://example.com/portal/.+`),
+        ),
+      },
     })
   })
 
