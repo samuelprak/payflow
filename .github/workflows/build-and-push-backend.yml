@@ -72,15 +72,15 @@ jobs:
     steps:
 
     - name: Checkout main
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
-    - name: Preprod - Set Kubernetes context
+    - name: Set Kubernetes context
       uses: azure/k8s-set-context@v2
       with:
         method: kubeconfig
         kubeconfig: ${{ secrets.KUBECONFIG_PREPROD }}
 
-    - name: Deploy
+    - name: Deploy on Preprod
       run: |
         kubectl apply -f ./k8s/secrets/sealed-payflow-preprod-secrets.yaml
         helm upgrade --install payflow ./k8s/helm/payflow \

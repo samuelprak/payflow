@@ -183,4 +183,47 @@ describe("getSubscriptions", () => {
       },
     ])
   })
+
+  it("handles cancellation requested subscriptions", async () => {
+    listSubscriptionsMock.mockResolvedValue([
+      {
+        id: "sub_123",
+        status: "active",
+        current_period_start: 1633046400,
+        current_period_end: 1635724800,
+        cancel_at_period_end: false,
+        default_payment_method: {
+          card: {
+            brand: "visa",
+            last4: "4242",
+            exp_month: 12,
+            exp_year: 2023,
+          },
+        },
+        items: {
+          data: [
+            {
+              price: { id: "price_123", unit_amount: 1000, currency: "usd" },
+            },
+          ],
+        },
+        cancellation_details: {
+          reason: "cancellation_requested",
+        },
+      },
+    ])
+
+    const result = await getSubscriptions({ stripe, stripeCutomerId })
+
+    expect(listSubscriptionsMock).toHaveBeenCalledWith({
+      stripe,
+      stripeCutomerId,
+    })
+
+    expect(result).toMatchObject([
+      expect.objectContaining({
+        cancelAtPeriodEnd: true,
+      }),
+    ])
+  })
 })

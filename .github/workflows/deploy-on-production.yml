@@ -1,0 +1,52 @@
+name: Deploy on Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy. If not provided, the latest commit on main will be deployed.'
+        required: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: samuelprak/payflow-backend
+
+jobs:
+  deploy:
+    name: Deploy on Production
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout main
+      uses: actions/checkout@v4
+      with:
+        ref: main
+        fetch-depth: 0
+
+    - name: Set Kubernetes context
+      uses: azure/k8s-set-context@v2
+      with:
+        method: kubeconfig
+        kubeconfig: ${{ secrets.KUBECONFIG_PRODUCTION }}
+
+    - name: Set image tag
+      id: image-tag
+      env:
+        INPUTS_VERSION: ${{ inputs.version }}
+      run: |
+        if [ -z "$INPUTS_VERSION" ]; then
+          echo "tag=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        else
+          echo "tag=$INPUTS_VERSION" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Deploy on Production
+      run: |
+        kubectl apply -f ./k8s/secrets/sealed-payflow-production-secrets.yaml
+        helm upgrade --install payflow ./k8s/helm/payflow \
+          --namespace payflow-production \
+          --values k8s/helm/payflow/values.yaml \
+          --values k8s/helm/payflow/values-production.yaml \
+          --set image.tag=sha-${{ steps.image-tag.outputs.tag }}
+        kubectl rollout restart deployment payflow -n payflow-production
+        kubectl rollout status deployment payflow -n payflow-production

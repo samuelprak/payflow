@@ -39,7 +39,9 @@ export async function getSubscriptions({
       productExternalRef: items.data[0].price.id,
       currentPeriodStart: new Date(current_period_start * 1000),
       currentPeriodEnd: new Date(current_period_end * 1000),
-      cancelAtPeriodEnd: subscription.cancel_at_period_end,
+      cancelAtPeriodEnd:
+        subscription.cancel_at_period_end ||
+        subscription.cancellation_details?.reason === "cancellation_requested",
       paymentMethod: extractPaymentMethod(default_payment_method),
       ...(price.unit_amount !== null && { amount: price.unit_amount }),
       currency: price.currency,
