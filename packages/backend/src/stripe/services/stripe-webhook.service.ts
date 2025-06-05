@@ -73,7 +73,23 @@ export class StripeWebhookService {
 
     await this.eventEmitter.emitAsync(
       CustomerUpdatedEvent.eventName,
-      new CustomerUpdatedEvent(stripeCustomer.customerId),
+      new CustomerUpdatedEvent(stripeCustomer.customerId, {
+        type: "customer.updated",
+      }),
     )
+
+    if (event.type === "invoice.paid") {
+      const { hosted_invoice_url } = event.data.object
+
+      if (hosted_invoice_url) {
+        await this.eventEmitter.emitAsync(
+          CustomerUpdatedEvent.eventName,
+          new CustomerUpdatedEvent(stripeCustomer.customerId, {
+            type: "invoice.paid",
+            receiptUrl: hosted_invoice_url,
+          }),
+        )
+      }
+    }
   }
 }

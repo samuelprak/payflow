@@ -150,7 +150,10 @@ describe("StripeWebhookService", () => {
       ).toHaveBeenCalledWith("cus_123")
       expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
         CustomerUpdatedEvent.eventName,
-        expect.any(CustomerUpdatedEvent),
+        expect.objectContaining({
+          customerId: "cust_123",
+          data: expect.objectContaining({ type: "customer.updated" }),
+        }),
       )
 
       // Verify the event has the correct customer ID
@@ -191,9 +194,59 @@ describe("StripeWebhookService", () => {
         ).toHaveBeenCalledWith("cus_123")
         expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
           CustomerUpdatedEvent.eventName,
-          expect.any(CustomerUpdatedEvent),
+          expect.objectContaining({
+            customerId: "cust_123",
+            data: expect.objectContaining({
+              type: "customer.updated",
+            }),
+          }),
         )
       }
+    })
+
+    it("should emit CustomerUpdatedEvent with receiptUrl for invoice.paid event", async () => {
+      const hostedInvoiceUrl = "https://stripe.com/invoice/123"
+      mockWebhooksConstructEvent.mockReturnValue({
+        type: "invoice.paid",
+        data: {
+          object: {
+            customer: "cus_123",
+            hosted_invoice_url: hostedInvoiceUrl,
+          },
+        },
+      })
+
+      await service.handleWebhook(stripeAccountId, signature, rawBody)
+
+      expect(stripeAccountRepository.findOneById).toHaveBeenCalledWith(
+        stripeAccountId,
+      )
+      expect(
+        stripeCustomerRepository.findOneByStripeCustomerId,
+      ).toHaveBeenCalledWith("cus_123")
+      // Should emit twice: once for customer.updated, once for invoice.paid
+      expect(eventEmitter.emitAsync).toHaveBeenCalledTimes(2)
+      // First emit: customer.updated
+      expect(eventEmitter.emitAsync).toHaveBeenNthCalledWith(
+        1,
+        CustomerUpdatedEvent.eventName,
+        expect.objectContaining({
+          customerId: "cust_123",
+          data: expect.objectContaining({ type: "customer.updated" }),
+        }),
+      )
+      // Second emit: invoice.paid with receiptUrl
+      expect(eventEmitter.emitAsync).toHaveBeenNthCalledWith(
+        2,
+        CustomerUpdatedEvent.eventName,
+        expect.objectContaining({
+          customerId: "cust_123",
+          data: expect.objectContaining({
+            type: "invoice.paid",
+            receiptUrl: hostedInvoiceUrl,
+          }),
+        }),
+      )
     })
   })
 })

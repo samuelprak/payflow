@@ -67,7 +67,10 @@ describe("WebhookProcessor", () => {
       // Arrange
       const mockJob = {
         name: SEND_WEBHOOK_JOB,
-        data: { customerId: customer.id } as CustomerUpdatedEvent,
+        data: {
+          customerId: customer.id,
+          data: { type: "customer.updated" },
+        } satisfies CustomerUpdatedEvent,
       } as Job
 
       // Act
@@ -97,7 +100,10 @@ describe("WebhookProcessor", () => {
       customerRepository.findOneWithTenant.mockResolvedValue(null)
       const mockJob = {
         name: SEND_WEBHOOK_JOB,
-        data: { customerId: "non-existent" } as CustomerUpdatedEvent,
+        data: {
+          customerId: "non-existent",
+          data: { type: "customer.updated" },
+        } satisfies CustomerUpdatedEvent,
       } as Job
 
       // Act
@@ -116,7 +122,10 @@ describe("WebhookProcessor", () => {
       // Arrange
       const mockJob = {
         name: "UNKNOWN_JOB",
-        data: { customerId: "customer-123" },
+        data: {
+          customerId: "customer-123",
+          data: { type: "customer.updated" },
+        } satisfies CustomerUpdatedEvent,
       } as Job
 
       // Act
@@ -124,6 +133,67 @@ describe("WebhookProcessor", () => {
 
       // Assert
       expect(customerRepository.findOneWithTenant).not.toHaveBeenCalled()
+    })
+
+    it("should process SEND_WEBHOOK_JOB for invoice.paid correctly", async () => {
+      // Arrange
+      const receiptUrl = "https://receipt.url/test.pdf"
+      const mockJob = {
+        name: SEND_WEBHOOK_JOB,
+        data: {
+          customerId: customer.id,
+          data: { type: "invoice.paid", receiptUrl },
+        } satisfies CustomerUpdatedEvent,
+      } as Job
+
+      // Act
+      await processor.process(mockJob)
+
+      // Assert
+      expect(customerRepository.findOneWithTenant).toHaveBeenCalledWith(
+        customer.id,
+      )
+      // paymentProviderService.forTenant and getSubscriptions are NOT called for invoice.paid
+      expect(paymentProviderService.forTenant).not.toHaveBeenCalled()
+      expect(mockClient.getSubscriptions).not.toHaveBeenCalled()
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        customer.tenant.webhookUrl,
+        {
+          data: {
+            type: "invoice.paid",
+            invoice: {
+              id: customer.id,
+              email: customer.email,
+              userRef: customer.userRef,
+              receiptUrl,
+            },
+          },
+        },
+      )
+    })
+
+    it("should not send invoice.paid webhook if customer is not found", async () => {
+      // Arrange
+      customerRepository.findOneWithTenant.mockResolvedValue(null)
+      const receiptUrl = "https://receipt.url/test.pdf"
+      const mockJob = {
+        name: SEND_WEBHOOK_JOB,
+        data: {
+          customerId: "non-existent",
+          data: { type: "invoice.paid", receiptUrl },
+        } satisfies CustomerUpdatedEvent,
+      } as Job
+
+      // Act
+      await processor.process(mockJob)
+
+      // Assert
+      expect(customerRepository.findOneWithTenant).toHaveBeenCalledWith(
+        "non-existent",
+      )
+      expect(paymentProviderService.forTenant).not.toHaveBeenCalled()
+      expect(mockClient.getSubscriptions).not.toHaveBeenCalled()
+      expect(mockedAxios.post).not.toHaveBeenCalled()
     })
   })
 
@@ -133,7 +203,10 @@ describe("WebhookProcessor", () => {
       mockedAxios.post.mockRejectedValue(new Error("Network error"))
       const mockJob = {
         name: SEND_WEBHOOK_JOB,
-        data: { customerId: "customer-123" } as CustomerUpdatedEvent,
+        data: {
+          customerId: "customer-123",
+          data: { type: "customer.updated" },
+        } satisfies CustomerUpdatedEvent,
       } as Job
 
       // Act & Assert
@@ -146,13 +219,33 @@ describe("WebhookProcessor", () => {
       mockClient.getSubscriptions.mockRejectedValue(new Error("Provider error"))
       const mockJob = {
         name: SEND_WEBHOOK_JOB,
-        data: { customerId: "customer-123" } as CustomerUpdatedEvent,
+        data: {
+          customerId: "customer-123",
+          data: { type: "customer.updated" },
+        } satisfies CustomerUpdatedEvent,
       } as Job
 
       // Act & Assert
       await expect(processor.process(mockJob)).rejects.toThrow("Provider error")
       expect(mockClient.getSubscriptions).toHaveBeenCalled()
       expect(mockedAxios.post).not.toHaveBeenCalled()
+    })
+
+    it("should handle webhook request failures for invoice.paid", async () => {
+      // Arrange
+      mockedAxios.post.mockRejectedValue(new Error("Network error"))
+      const receiptUrl = "https://receipt.url/test.pdf"
+      const mockJob = {
+        name: SEND_WEBHOOK_JOB,
+        data: {
+          customerId: customer.id,
+          data: { type: "invoice.paid", receiptUrl },
+        } satisfies CustomerUpdatedEvent,
+      } as Job
+
+      // Act & Assert
+      await expect(processor.process(mockJob)).rejects.toThrow("Network error")
+      expect(mockedAxios.post).toHaveBeenCalled()
     })
   })
 })
