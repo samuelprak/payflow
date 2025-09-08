@@ -9,7 +9,7 @@ const listSubscriptionsMock = listSubscriptions as jest.Mock
 
 describe("getSubscriptions", () => {
   const stripe = new Stripe("fake-api-key")
-  const stripeCutomerId = "cus_12345"
+  const stripeCustomerId = "cus_12345"
 
   it("returns running subscriptions", async () => {
     listSubscriptionsMock.mockResolvedValue([
@@ -37,11 +37,11 @@ describe("getSubscriptions", () => {
       },
     ])
 
-    const result = await getSubscriptions({ stripe, stripeCutomerId })
+    const result = await getSubscriptions({ stripe, stripeCustomerId })
 
     expect(listSubscriptionsMock).toHaveBeenCalledWith({
       stripe,
-      stripeCutomerId,
+      stripeCustomerId,
     })
     expect(result).toEqual([
       {
@@ -82,11 +82,11 @@ describe("getSubscriptions", () => {
       },
     ])
 
-    const result = await getSubscriptions({ stripe, stripeCutomerId })
+    const result = await getSubscriptions({ stripe, stripeCustomerId })
 
     expect(listSubscriptionsMock).toHaveBeenCalledWith({
       stripe,
-      stripeCutomerId,
+      stripeCustomerId,
     })
     expect(result).toEqual([])
   })
@@ -110,11 +110,11 @@ describe("getSubscriptions", () => {
       },
     ])
 
-    const result = await getSubscriptions({ stripe, stripeCutomerId })
+    const result = await getSubscriptions({ stripe, stripeCustomerId })
 
     expect(listSubscriptionsMock).toHaveBeenCalledWith({
       stripe,
-      stripeCutomerId,
+      stripeCustomerId,
     })
     expect(result).toEqual([
       {
@@ -158,11 +158,11 @@ describe("getSubscriptions", () => {
       },
     ])
 
-    const result = await getSubscriptions({ stripe, stripeCutomerId })
+    const result = await getSubscriptions({ stripe, stripeCustomerId })
 
     expect(listSubscriptionsMock).toHaveBeenCalledWith({
       stripe,
-      stripeCutomerId,
+      stripeCustomerId,
     })
     expect(result).toEqual([
       {
@@ -213,11 +213,11 @@ describe("getSubscriptions", () => {
       },
     ])
 
-    const result = await getSubscriptions({ stripe, stripeCutomerId })
+    const result = await getSubscriptions({ stripe, stripeCustomerId })
 
     expect(listSubscriptionsMock).toHaveBeenCalledWith({
       stripe,
-      stripeCutomerId,
+      stripeCustomerId,
     })
 
     expect(result).toMatchObject([

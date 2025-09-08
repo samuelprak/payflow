@@ -19,4 +19,6 @@ export class StubPaymentProviderClient
   getSubscriptions(): Promise<SubscriptionGet[]> {
     return Promise.resolve([])
   }
+
+  async updateSubscription(): Promise<void> {}
 }

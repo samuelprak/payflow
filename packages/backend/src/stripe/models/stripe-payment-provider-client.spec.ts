@@ -1,9 +1,11 @@
 import { CheckoutSessionProduct } from "src/payment-provider/interfaces/checkout-session-params"
+import { SubscriptionUpdateProduct } from "src/payment-provider/interfaces/subscription-update-params"
 import { StripeCustomerFactory } from "src/stripe/factories/stripe-customer.factory"
 import { StripePaymentProviderClient } from "src/stripe/models/stripe-payment-provider-client"
 import { createCheckout } from "src/stripe/models/stripe/use-cases/create-checkout"
 import { createPortalSession } from "src/stripe/models/stripe/use-cases/create-portal-session"
 import { syncCustomer } from "src/stripe/models/stripe/use-cases/sync-customer"
+import { updateSubscription } from "src/stripe/models/stripe/use-cases/update-subscription"
 import { StripeCustomerRepository } from "src/stripe/repositories/stripe-customer.repository"
 import { v4 as uuidv4 } from "uuid"
 
@@ -16,9 +18,13 @@ jest.mock("./stripe/use-cases/create-checkout", () => ({
 jest.mock("./stripe/use-cases/create-portal-session", () => ({
   createPortalSession: jest.fn(),
 }))
+jest.mock("./stripe/use-cases/update-subscription", () => ({
+  updateSubscription: jest.fn(),
+}))
 const syncCustomerMock = syncCustomer as jest.Mock
 const createCheckoutMock = createCheckout as jest.Mock
 const createPortalSessionMock = createPortalSession as jest.Mock
+const updateSubscriptionMock = updateSubscription as jest.Mock
 
 describe("StripePaymentProviderClient", () => {
   let stripeCustomerRepository: StripeCustomerRepository
@@ -126,6 +132,118 @@ describe("StripePaymentProviderClient", () => {
         returnUrl: "https://example.com/return",
       })
       expect(result).toEqual({ portalUrl: "https://portal.url" })
+    })
+  })
+
+  describe("updateSubscription", () => {
+    it("updates subscription successfully", async () => {
+      const stripeCustomer = await new StripeCustomerFactory().make()
+      jest
+        .spyOn(stripeCustomerRepository, "findOneByCustomerId")
+        .mockResolvedValue(stripeCustomer)
+
+      const products: SubscriptionUpdateProduct[] = [
+        {
+          externalRef: "price_123",
+          quantity: 1,
+        },
+      ]
+
+      updateSubscriptionMock.mockResolvedValue(undefined)
+
+      await client.updateSubscription({
+        customerId: "customer123",
+        products,
+      })
+
+      expect(updateSubscriptionMock).toHaveBeenCalledWith({
+        stripe: client["stripe"],
+        products,
+        stripeCustomerId: stripeCustomer.stripeCustomerId,
+      })
+    })
+
+    it("handles multiple products", async () => {
+      const stripeCustomer = await new StripeCustomerFactory().make()
+      jest
+        .spyOn(stripeCustomerRepository, "findOneByCustomerId")
+        .mockResolvedValue(stripeCustomer)
+
+      const products: SubscriptionUpdateProduct[] = [
+        {
+          externalRef: "price_123",
+          quantity: 2,
+        },
+        {
+          externalRef: "price_456",
+          quantity: 1,
+        },
+      ]
+
+      updateSubscriptionMock.mockResolvedValue(undefined)
+
+      await client.updateSubscription({
+        customerId: "customer123",
+        products,
+      })
+
+      expect(updateSubscriptionMock).toHaveBeenCalledWith({
+        stripe: client["stripe"],
+        products,
+        stripeCustomerId: stripeCustomer.stripeCustomerId,
+      })
+    })
+
+    it("throws an error if stripe customer not found", async () => {
+      jest
+        .spyOn(stripeCustomerRepository, "findOneByCustomerId")
+        .mockResolvedValue(null)
+
+      const products: SubscriptionUpdateProduct[] = [
+        {
+          externalRef: "price_123",
+          quantity: 1,
+        },
+      ]
+
+      await expect(
+        client.updateSubscription({
+          customerId: "customer123",
+          products,
+        }),
+      ).rejects.toThrow("Stripe customer not found, please sync customer first")
+
+      expect(updateSubscriptionMock).not.toHaveBeenCalled()
+    })
+
+    it("propagates errors from updateSubscription use case", async () => {
+      const stripeCustomer = await new StripeCustomerFactory().make()
+      jest
+        .spyOn(stripeCustomerRepository, "findOneByCustomerId")
+        .mockResolvedValue(stripeCustomer)
+
+      const products: SubscriptionUpdateProduct[] = [
+        {
+          externalRef: "price_123",
+          quantity: 1,
+        },
+      ]
+
+      const error = new Error("Update subscription error")
+      updateSubscriptionMock.mockRejectedValue(error)
+
+      await expect(
+        client.updateSubscription({
+          customerId: "customer123",
+          products,
+        }),
+      ).rejects.toThrow("Update subscription error")
+
+      expect(updateSubscriptionMock).toHaveBeenCalledWith({
+        stripe: client["stripe"],
+        products,
+        stripeCustomerId: stripeCustomer.stripeCustomerId,
+      })
     })
   })
 })

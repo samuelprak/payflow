@@ -5,7 +5,7 @@ import Stripe from "stripe"
 
 type Params = {
   stripe: Stripe
-  stripeCutomerId: string
+  stripeCustomerId: string
 }
 
 const RUNNING_SUBSCRIPTION_STATUSES = ["active", "trialing", "past_due"]
@@ -13,9 +13,9 @@ const SHOULD_PROVIDE_PRODUCT_STATUSES = ["active", "trialing"]
 
 export async function getSubscriptions({
   stripe,
-  stripeCutomerId,
+  stripeCustomerId,
 }: Params): Promise<SubscriptionGet[]> {
-  const subscriptions = await listSubscriptions({ stripe, stripeCutomerId })
+  const subscriptions = await listSubscriptions({ stripe, stripeCustomerId })
   const runningSubscriptions = subscriptions.filter(({ status }) =>
     RUNNING_SUBSCRIPTION_STATUSES.includes(status),
   )

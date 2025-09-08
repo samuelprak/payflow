@@ -5,11 +5,13 @@ type Params = {
   stripeCustomerId: string
 }
 
-export async function listSubscriptions({ stripe, stripeCustomerId }: Params) {
+export async function listActiveSubscriptions({
+  stripe,
+  stripeCustomerId,
+}: Params) {
   const subscriptions = await stripe.subscriptions.list({
     customer: stripeCustomerId,
-    status: "all",
-    expand: ["data.default_payment_method"],
+    status: "active",
   })
 
   return subscriptions.data

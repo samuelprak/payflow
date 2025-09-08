@@ -24,6 +24,12 @@ export class CustomerRepository {
     })
   }
 
+  async findOneByUserRef(userRef: string, tenant: Tenant) {
+    return this.customerRepository.findOneOrFail({
+      where: { userRef, tenant: { id: tenant.id } },
+    })
+  }
+
   async sync({ email, userRef, tenant }: FindOrCreateParams) {
     const customer = await this.customerRepository.findOne({
       where: { userRef, tenant: { id: tenant.id } },

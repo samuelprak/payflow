@@ -3,10 +3,12 @@ import { BaseCustomer } from "src/payment-provider/interfaces/base-customer"
 import { CheckoutSessionParams } from "src/payment-provider/interfaces/checkout-session-params"
 import { PaymentProviderClientInterface } from "src/payment-provider/interfaces/payment-provider-client.interface"
 import { PortalSessionParams } from "src/payment-provider/interfaces/portal-session-params"
+import { SubscriptionUpdateParams } from "src/payment-provider/interfaces/subscription-update-params"
 import { createCheckout } from "src/stripe/models/stripe/use-cases/create-checkout"
 import { createPortalSession } from "src/stripe/models/stripe/use-cases/create-portal-session"
 import { getSubscriptions } from "src/stripe/models/stripe/use-cases/get-subscriptions"
 import { syncCustomer } from "src/stripe/models/stripe/use-cases/sync-customer"
+import { updateSubscription } from "src/stripe/models/stripe/use-cases/update-subscription"
 import { StripeCustomerRepository } from "src/stripe/repositories/stripe-customer.repository"
 import Stripe from "stripe"
 
@@ -71,7 +73,17 @@ export class StripePaymentProviderClient
 
     return getSubscriptions({
       stripe: this.stripe,
-      stripeCutomerId: stripeCustomer.stripeCustomerId,
+      stripeCustomerId: stripeCustomer.stripeCustomerId,
+    })
+  }
+
+  async updateSubscription({ customerId, products }: SubscriptionUpdateParams) {
+    const stripeCustomer = await this.getStripeCustomer(customerId)
+
+    return updateSubscription({
+      stripe: this.stripe,
+      products,
+      stripeCustomerId: stripeCustomer.stripeCustomerId,
     })
   }
 

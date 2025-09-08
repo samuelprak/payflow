@@ -95,4 +95,42 @@ describe("CustomerRepository", () => {
       expect(updatedCustomer.userRef).toEqual("test-user-ref")
     })
   })
+
+  describe("findOneByUserRef", () => {
+    it("finds a customer by userRef and tenant", async () => {
+      const tenant = await new TenantFactory().create()
+      const customer = await new CustomerFactory().create({
+        userRef: "test-user-ref",
+        tenant,
+      })
+
+      const result = await repository.findOneByUserRef("test-user-ref", tenant)
+
+      expect(result).toBeDefined()
+      expect(result).toBeInstanceOf(Customer)
+      expect(result.id).toBe(customer.id)
+      expect(result.userRef).toBe("test-user-ref")
+    })
+
+    it("throws EntityNotFoundError when customer not found", async () => {
+      const tenant = await new TenantFactory().create()
+
+      await expect(
+        repository.findOneByUserRef("nonexistent-user-ref", tenant),
+      ).rejects.toThrow()
+    })
+
+    it("does not find customer from different tenant", async () => {
+      const tenant1 = await new TenantFactory().create()
+      const tenant2 = await new TenantFactory().create()
+      await new CustomerFactory().create({
+        userRef: "test-user-ref",
+        tenant: tenant1,
+      })
+
+      await expect(
+        repository.findOneByUserRef("test-user-ref", tenant2),
+      ).rejects.toThrow()
+    })
+  })
 })

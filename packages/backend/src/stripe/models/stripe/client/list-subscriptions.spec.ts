@@ -5,14 +5,14 @@ jest.mock("stripe")
 
 describe("listSubscriptions", () => {
   let stripe: jest.Mocked<Stripe>
-  let stripeCutomerId: string
+  let stripeCustomerId: string
 
   beforeEach(() => {
     stripe = new Stripe("fake-api-key") as jest.Mocked<Stripe>
     stripe.subscriptions = {
       list: jest.fn(),
     } as unknown as Stripe.SubscriptionsResource
-    stripeCutomerId = "cus_12345"
+    stripeCustomerId = "cus_12345"
   })
 
   it("should return a list of subscriptions", async () => {
@@ -21,10 +21,10 @@ describe("listSubscriptions", () => {
       .fn()
       .mockResolvedValue({ data: mockSubscriptions })
 
-    const response = await listSubscriptions({ stripe, stripeCutomerId })
+    const response = await listSubscriptions({ stripe, stripeCustomerId })
 
     expect(stripe.subscriptions.list).toHaveBeenCalledWith({
-      customer: stripeCutomerId,
+      customer: stripeCustomerId,
       expand: ["data.default_payment_method"],
       status: "all",
     })

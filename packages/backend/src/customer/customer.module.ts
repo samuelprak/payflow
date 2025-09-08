@@ -20,8 +20,10 @@ import { CheckoutSession } from "src/customer/entities/checkout-session.entity"
 import { CheckoutSessionService } from "src/customer/services/checkout-session.service"
 import { CheckoutController } from "src/customer/controllers/checkout.controller"
 import { PortalController } from "src/customer/controllers/portal.controller"
+import { SubscriptionController } from "src/customer/controllers/subscription.controller"
 import { PortalSession } from "src/customer/entities/portal-session.entity"
 import { PortalSessionRepository } from "src/customer/repositories/portal-session.repository"
+import { SubscriptionService } from "src/customer/services/subscription.service"
 
 @Module({
   imports: [
@@ -46,6 +48,7 @@ import { PortalSessionRepository } from "src/customer/repositories/portal-sessio
     PortalSessionService,
     CheckoutSessionRepository,
     PortalSessionRepository,
+    SubscriptionService,
   ],
   controllers: [
     CustomerController,
@@ -53,6 +56,7 @@ import { PortalSessionRepository } from "src/customer/repositories/portal-sessio
     PortalSessionController,
     CheckoutController,
     PortalController,
+    SubscriptionController,
   ],
 })
 export class CustomerModule {}
