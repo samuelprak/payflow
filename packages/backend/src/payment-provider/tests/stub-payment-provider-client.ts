@@ -21,4 +21,6 @@ export class StubPaymentProviderClient
   }
 
   async updateSubscription(): Promise<void> {}
+
+  async cancelSubscriptionAtPeriodEnd(): Promise<void> {}
 }

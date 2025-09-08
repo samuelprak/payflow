@@ -6,6 +6,7 @@ import { CaslUser } from "src/casl/models/casl-user"
 import { Roles } from "src/casl/models/roles"
 import { CustomerModule } from "src/customer/customer.module"
 import { CustomerFactory } from "src/customer/factories/customer.factory"
+import { CancelSubscriptionDto } from "src/customer/models/dto/cancel-subscription.dto"
 import { UpgradeSubscriptionDto } from "src/customer/models/dto/upgrade-subscription.dto"
 import { StubPaymentProviderModule } from "src/payment-provider/tests/stub-payment-provider.module"
 import { CustomRequest } from "src/request"
@@ -215,6 +216,63 @@ describe("SubscriptionController", () => {
         .set("x-api-key", "invalid-api-key")
         .send(upgradeDto)
         .expect(401)
+    })
+  })
+
+  describe("PATCH /subscriptions", () => {
+    it("cancels subscription at period end successfully", async () => {
+      const tenant = await new TenantFactory().create()
+      const customer = await new CustomerFactory().create({
+        userRef: "test-user-ref",
+        tenant,
+      })
+
+      const cancelDto: CancelSubscriptionDto = {
+        userRef: customer.userRef,
+        cancelAtPeriodEnd: true,
+      }
+
+      await request(app.getHttpServer())
+        .patch("/subscriptions")
+        .set(asTenant(tenant))
+        .send(cancelDto)
+        .expect(200)
+        .expect({ success: true })
+    })
+
+    it("resumes subscription successfully", async () => {
+      const tenant = await new TenantFactory().create()
+      const customer = await new CustomerFactory().create({
+        userRef: "test-user-ref-resume",
+        tenant,
+      })
+
+      const resumeDto: CancelSubscriptionDto = {
+        userRef: customer.userRef,
+        cancelAtPeriodEnd: false,
+      }
+
+      await request(app.getHttpServer())
+        .patch("/subscriptions")
+        .set(asTenant(tenant))
+        .send(resumeDto)
+        .expect(200)
+        .expect({ success: true })
+    })
+
+    it("returns 404 when customer not found", async () => {
+      const tenant = await new TenantFactory().create()
+
+      const cancelDto: CancelSubscriptionDto = {
+        userRef: "nonexistent-user-ref",
+        cancelAtPeriodEnd: true,
+      }
+
+      await request(app.getHttpServer())
+        .patch("/subscriptions")
+        .set(asTenant(tenant))
+        .send(cancelDto)
+        .expect(404)
     })
   })
 })

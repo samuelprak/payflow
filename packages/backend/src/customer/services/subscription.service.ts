@@ -10,6 +10,12 @@ type UpdateSubscriptionParams = {
   tenant: Tenant
 }
 
+type CancelSubscriptionAtPeriodEndParams = {
+  userRef: string
+  cancelAtPeriodEnd: boolean
+  tenant: Tenant
+}
+
 @Injectable()
 export class SubscriptionService {
   constructor(
@@ -31,6 +37,23 @@ export class SubscriptionService {
     await client.updateSubscription({
       customerId: customer.id,
       products,
+    })
+  }
+
+  async cancelSubscriptionAtPeriodEnd({
+    userRef,
+    cancelAtPeriodEnd,
+    tenant,
+  }: CancelSubscriptionAtPeriodEndParams) {
+    const customer = await this.customerRepository.findOneByUserRef(
+      userRef,
+      tenant,
+    )
+
+    const client = await this.paymentProviderService.forTenant(tenant.id)
+    await client.cancelSubscriptionAtPeriodEnd({
+      customerId: customer.id,
+      cancelAtPeriodEnd,
     })
   }
 }

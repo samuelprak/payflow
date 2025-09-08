@@ -3,7 +3,9 @@ import { BaseCustomer } from "src/payment-provider/interfaces/base-customer"
 import { CheckoutSessionParams } from "src/payment-provider/interfaces/checkout-session-params"
 import { PaymentProviderClientInterface } from "src/payment-provider/interfaces/payment-provider-client.interface"
 import { PortalSessionParams } from "src/payment-provider/interfaces/portal-session-params"
+import { SubscriptionCancelParams } from "src/payment-provider/interfaces/subscription-cancel-params"
 import { SubscriptionUpdateParams } from "src/payment-provider/interfaces/subscription-update-params"
+import { cancelSubscriptionAtPeriodEnd } from "src/stripe/models/stripe/use-cases/cancel-subscription-at-period-end"
 import { createCheckout } from "src/stripe/models/stripe/use-cases/create-checkout"
 import { createPortalSession } from "src/stripe/models/stripe/use-cases/create-portal-session"
 import { getSubscriptions } from "src/stripe/models/stripe/use-cases/get-subscriptions"
@@ -84,6 +86,19 @@ export class StripePaymentProviderClient
       stripe: this.stripe,
       products,
       stripeCustomerId: stripeCustomer.stripeCustomerId,
+    })
+  }
+
+  async cancelSubscriptionAtPeriodEnd({
+    customerId,
+    cancelAtPeriodEnd,
+  }: SubscriptionCancelParams) {
+    const stripeCustomer = await this.getStripeCustomer(customerId)
+
+    return cancelSubscriptionAtPeriodEnd({
+      stripe: this.stripe,
+      stripeCustomerId: stripeCustomer.stripeCustomerId,
+      cancelAtPeriodEnd,
     })
   }
 

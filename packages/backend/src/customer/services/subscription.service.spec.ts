@@ -209,4 +209,153 @@ describe("SubscriptionService", () => {
       expect(paymentProviderService.forTenant).toHaveBeenCalledWith(tenant.id)
     })
   })
+
+  describe("cancelSubscriptionAtPeriodEnd", () => {
+    it("should cancel subscription at period end successfully", async () => {
+      const tenant = await new TenantFactory().make()
+      const customer = await new CustomerFactory().make({
+        id: uuidv4(),
+        userRef: "test-user-ref",
+        tenant,
+      })
+
+      const mockClient = {
+        cancelSubscriptionAtPeriodEnd: jest.fn().mockResolvedValue(undefined),
+      } as unknown as PaymentProviderClientInterface
+
+      customerRepository.findOneByUserRef.mockResolvedValue(customer)
+      paymentProviderService.forTenant.mockResolvedValue(mockClient)
+
+      await service.cancelSubscriptionAtPeriodEnd({
+        userRef: "test-user-ref",
+        cancelAtPeriodEnd: true,
+        tenant,
+      })
+
+      expect(customerRepository.findOneByUserRef).toHaveBeenCalledWith(
+        "test-user-ref",
+        tenant,
+      )
+      expect(paymentProviderService.forTenant).toHaveBeenCalledWith(tenant.id)
+      expect(mockClient.cancelSubscriptionAtPeriodEnd).toHaveBeenCalledWith({
+        customerId: customer.id,
+        cancelAtPeriodEnd: true,
+      })
+    })
+
+    it("should resume subscription successfully", async () => {
+      const tenant = await new TenantFactory().make()
+      const customer = await new CustomerFactory().make({
+        id: uuidv4(),
+        userRef: "test-user-ref",
+        tenant,
+      })
+
+      const mockClient = {
+        cancelSubscriptionAtPeriodEnd: jest.fn().mockResolvedValue(undefined),
+      } as unknown as PaymentProviderClientInterface
+
+      customerRepository.findOneByUserRef.mockResolvedValue(customer)
+      paymentProviderService.forTenant.mockResolvedValue(mockClient)
+
+      await service.cancelSubscriptionAtPeriodEnd({
+        userRef: "test-user-ref",
+        cancelAtPeriodEnd: false,
+        tenant,
+      })
+
+      expect(customerRepository.findOneByUserRef).toHaveBeenCalledWith(
+        "test-user-ref",
+        tenant,
+      )
+      expect(paymentProviderService.forTenant).toHaveBeenCalledWith(tenant.id)
+      expect(mockClient.cancelSubscriptionAtPeriodEnd).toHaveBeenCalledWith({
+        customerId: customer.id,
+        cancelAtPeriodEnd: false,
+      })
+    })
+
+    it("should throw NotFoundException when customer not found", async () => {
+      const tenant = await new TenantFactory().make()
+
+      const error = new NotFoundException("Customer not found")
+      customerRepository.findOneByUserRef.mockRejectedValue(error)
+
+      await expect(
+        service.cancelSubscriptionAtPeriodEnd({
+          userRef: "nonexistent-user-ref",
+          cancelAtPeriodEnd: true,
+          tenant,
+        }),
+      ).rejects.toThrow(NotFoundException)
+
+      expect(customerRepository.findOneByUserRef).toHaveBeenCalledWith(
+        "nonexistent-user-ref",
+        tenant,
+      )
+      expect(paymentProviderService.forTenant).not.toHaveBeenCalled()
+    })
+
+    it("should propagate payment provider client errors", async () => {
+      const tenant = await new TenantFactory().make()
+      const customer = await new CustomerFactory().make({
+        id: uuidv4(),
+        userRef: "test-user-ref",
+        tenant,
+      })
+
+      const clientError = new Error("Payment provider error")
+      const mockClient = {
+        cancelSubscriptionAtPeriodEnd: jest.fn().mockRejectedValue(clientError),
+      } as unknown as PaymentProviderClientInterface
+
+      customerRepository.findOneByUserRef.mockResolvedValue(customer)
+      paymentProviderService.forTenant.mockResolvedValue(mockClient)
+
+      await expect(
+        service.cancelSubscriptionAtPeriodEnd({
+          userRef: "test-user-ref",
+          cancelAtPeriodEnd: true,
+          tenant,
+        }),
+      ).rejects.toThrow("Payment provider error")
+
+      expect(customerRepository.findOneByUserRef).toHaveBeenCalledWith(
+        "test-user-ref",
+        tenant,
+      )
+      expect(paymentProviderService.forTenant).toHaveBeenCalledWith(tenant.id)
+      expect(mockClient.cancelSubscriptionAtPeriodEnd).toHaveBeenCalledWith({
+        customerId: customer.id,
+        cancelAtPeriodEnd: true,
+      })
+    })
+
+    it("should propagate payment provider service errors", async () => {
+      const tenant = await new TenantFactory().make()
+      const customer = await new CustomerFactory().make({
+        id: uuidv4(),
+        userRef: "test-user-ref",
+        tenant,
+      })
+
+      const serviceError = new Error("Payment provider service error")
+      customerRepository.findOneByUserRef.mockResolvedValue(customer)
+      paymentProviderService.forTenant.mockRejectedValue(serviceError)
+
+      await expect(
+        service.cancelSubscriptionAtPeriodEnd({
+          userRef: "test-user-ref",
+          cancelAtPeriodEnd: true,
+          tenant,
+        }),
+      ).rejects.toThrow("Payment provider service error")
+
+      expect(customerRepository.findOneByUserRef).toHaveBeenCalledWith(
+        "test-user-ref",
+        tenant,
+      )
+      expect(paymentProviderService.forTenant).toHaveBeenCalledWith(tenant.id)
+    })
+  })
 })

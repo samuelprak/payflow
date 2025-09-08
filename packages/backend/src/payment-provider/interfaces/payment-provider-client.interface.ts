@@ -4,6 +4,7 @@ import { BaseCustomer } from "src/payment-provider/interfaces/base-customer"
 import { BasePortalSession } from "src/payment-provider/interfaces/base-portal-session"
 import { CheckoutSessionParams } from "src/payment-provider/interfaces/checkout-session-params"
 import { PortalSessionParams } from "src/payment-provider/interfaces/portal-session-params"
+import { SubscriptionCancelParams } from "src/payment-provider/interfaces/subscription-cancel-params"
 import { SubscriptionUpdateParams } from "src/payment-provider/interfaces/subscription-update-params"
 
 export interface PaymentProviderClientInterface {
@@ -14,4 +15,5 @@ export interface PaymentProviderClientInterface {
   createPortalSession(params: PortalSessionParams): Promise<BasePortalSession>
   getSubscriptions(customerId: string): Promise<SubscriptionGet[]>
   updateSubscription(params: SubscriptionUpdateParams): Promise<void>
+  cancelSubscriptionAtPeriodEnd(params: SubscriptionCancelParams): Promise<void>
 }
