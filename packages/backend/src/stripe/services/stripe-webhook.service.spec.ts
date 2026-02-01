@@ -1,11 +1,12 @@
 import { ForbiddenException } from "@nestjs/common"
-import { EventEmitter2 } from "@nestjs/event-emitter"
 import { Test, TestingModule } from "@nestjs/testing"
-import { CustomerUpdatedEvent } from "src/customer/events/customer-updated.event"
 import { webhooksConstructEvent } from "../models/stripe/client/webhooks-construct-event"
 import { StripeAccountRepository } from "../repositories/stripe-account.repository"
 import { StripeCustomerRepository } from "../repositories/stripe-customer.repository"
+import { StripeWebhookDispatcherService } from "./stripe-webhook-dispatcher.service"
 import { StripeWebhookService } from "./stripe-webhook.service"
+import { StripeCustomer } from "../entities/stripe-customer.entity"
+import Stripe from "stripe"
 
 jest.mock("../models/stripe/client/webhooks-construct-event")
 
@@ -15,7 +16,7 @@ describe("StripeWebhookService", () => {
   let service: StripeWebhookService
   let stripeAccountRepository: jest.Mocked<StripeAccountRepository>
   let stripeCustomerRepository: jest.Mocked<StripeCustomerRepository>
-  let eventEmitter: jest.Mocked<EventEmitter2>
+  let webhookDispatcher: jest.Mocked<StripeWebhookDispatcherService>
 
   const mockStripeAccount = {
     id: "acc_123",
@@ -27,7 +28,7 @@ describe("StripeWebhookService", () => {
     id: "sc_123",
     customerId: "cust_123",
     stripeCustomerId: "cus_123",
-  }
+  } as StripeCustomer
 
   const stripeAccountId = "acc_123"
   const signature = "test_signature"
@@ -44,9 +45,9 @@ describe("StripeWebhookService", () => {
         .mockResolvedValue(mockStripeCustomer),
     } as unknown as jest.Mocked<StripeCustomerRepository>
 
-    eventEmitter = {
-      emitAsync: jest.fn().mockResolvedValue(undefined),
-    } as unknown as jest.Mocked<EventEmitter2>
+    webhookDispatcher = {
+      dispatch: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<StripeWebhookDispatcherService>
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -60,8 +61,8 @@ describe("StripeWebhookService", () => {
           useValue: stripeCustomerRepository,
         },
         {
-          provide: EventEmitter2,
-          useValue: eventEmitter,
+          provide: StripeWebhookDispatcherService,
+          useValue: webhookDispatcher,
         },
       ],
     }).compile()
@@ -82,17 +83,20 @@ describe("StripeWebhookService", () => {
       expect(stripeAccountRepository.findOneById).toHaveBeenCalledWith(
         stripeAccountId,
       )
+      expect(webhookDispatcher.dispatch).not.toHaveBeenCalled()
     })
 
-    it("should ignore events not in the allowed list", async () => {
-      mockWebhooksConstructEvent.mockReturnValue({
-        type: "not.allowed.event",
+    it("should dispatch event with context when signature is valid", async () => {
+      const mockEvent = {
+        type: "checkout.session.completed",
         data: {
           object: {
             customer: "cus_123",
           },
         },
-      })
+      } as unknown as Stripe.Event
+
+      mockWebhooksConstructEvent.mockReturnValue(mockEvent)
 
       await service.handleWebhook(stripeAccountId, signature, rawBody)
 
@@ -101,152 +105,131 @@ describe("StripeWebhookService", () => {
       )
       expect(
         stripeCustomerRepository.findOneByStripeCustomerId,
-      ).not.toHaveBeenCalled()
-      expect(eventEmitter.emitAsync).not.toHaveBeenCalled()
+      ).toHaveBeenCalledWith("cus_123")
+      expect(webhookDispatcher.dispatch).toHaveBeenCalledWith(
+        mockEvent,
+        expect.objectContaining({
+          stripeAccountId,
+          stripeCustomer: mockStripeCustomer,
+        }),
+      )
     })
 
-    it("should ignore events with no matching stripe customer", async () => {
-      mockWebhooksConstructEvent.mockReturnValue({
+    it("should dispatch event with null stripeCustomer when customer not found", async () => {
+      const mockEvent = {
         type: "checkout.session.completed",
         data: {
           object: {
             customer: "cus_nonexistent",
           },
         },
-      })
+      } as unknown as Stripe.Event
 
-      stripeCustomerRepository.findOneByStripeCustomerId.mockResolvedValueOnce(
-        null,
-      )
+      mockWebhooksConstructEvent.mockReturnValue(mockEvent)
+      stripeCustomerRepository.findOneByStripeCustomerId.mockResolvedValue(null)
 
       await service.handleWebhook(stripeAccountId, signature, rawBody)
 
-      expect(stripeAccountRepository.findOneById).toHaveBeenCalledWith(
-        stripeAccountId,
-      )
       expect(
         stripeCustomerRepository.findOneByStripeCustomerId,
       ).toHaveBeenCalledWith("cus_nonexistent")
-      expect(eventEmitter.emitAsync).not.toHaveBeenCalled()
+      expect(webhookDispatcher.dispatch).toHaveBeenCalledWith(
+        mockEvent,
+        expect.objectContaining({
+          stripeAccountId,
+          stripeCustomer: null,
+        }),
+      )
     })
 
-    it("should emit CustomerUpdatedEvent for valid events with matching customer", async () => {
-      mockWebhooksConstructEvent.mockReturnValue({
+    it("should dispatch event with null stripeCustomer when event has no customer field", async () => {
+      const mockEvent = {
+        type: "radar.early_fraud_warning.created",
+        data: {
+          object: {
+            id: "issfr_123",
+            charge: "ch_123",
+          },
+        },
+      } as unknown as Stripe.Event
+
+      mockWebhooksConstructEvent.mockReturnValue(mockEvent)
+
+      await service.handleWebhook(stripeAccountId, signature, rawBody)
+
+      expect(
+        stripeCustomerRepository.findOneByStripeCustomerId,
+      ).not.toHaveBeenCalled()
+      expect(webhookDispatcher.dispatch).toHaveBeenCalledWith(
+        mockEvent,
+        expect.objectContaining({
+          stripeAccountId,
+          stripeCustomer: null,
+        }),
+      )
+    })
+
+    it("should handle customer object instead of string", async () => {
+      const mockEvent = {
+        type: "checkout.session.completed",
+        data: {
+          object: {
+            customer: { id: "cus_789" },
+          },
+        },
+      } as unknown as Stripe.Event
+
+      mockWebhooksConstructEvent.mockReturnValue(mockEvent)
+
+      await service.handleWebhook(stripeAccountId, signature, rawBody)
+
+      expect(
+        stripeCustomerRepository.findOneByStripeCustomerId,
+      ).toHaveBeenCalledWith("cus_789")
+    })
+
+    it("should pass stripe instance in context", async () => {
+      const mockEvent = {
         type: "checkout.session.completed",
         data: {
           object: {
             customer: "cus_123",
           },
         },
-      })
+      } as unknown as Stripe.Event
+
+      mockWebhooksConstructEvent.mockReturnValue(mockEvent)
 
       await service.handleWebhook(stripeAccountId, signature, rawBody)
 
-      expect(stripeAccountRepository.findOneById).toHaveBeenCalledWith(
-        stripeAccountId,
-      )
-      expect(
-        stripeCustomerRepository.findOneByStripeCustomerId,
-      ).toHaveBeenCalledWith("cus_123")
-      expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
-        CustomerUpdatedEvent.eventName,
+      expect(webhookDispatcher.dispatch).toHaveBeenCalledWith(
+        mockEvent,
         expect.objectContaining({
-          customerId: "cust_123",
-          data: expect.objectContaining({ type: "customer.updated" }),
+          stripe: expect.any(Object),
         }),
       )
-
-      // Verify the event has the correct customer ID
-      const emittedEvent = (
-        (eventEmitter.emitAsync as jest.Mock).mock.calls[0] as [
-          string,
-          CustomerUpdatedEvent,
-        ]
-      )[1]
-      expect(emittedEvent.customerId).toBe("cust_123")
     })
 
-    it("should handle all allowed event types", async () => {
-      // Test a few different allowed event types
-      const allowedEventTypes = [
-        "invoice.paid",
-        "customer.subscription.updated",
-        "payment_intent.succeeded",
+    it("should handle various event types", async () => {
+      const eventTypes = [
+        { type: "invoice.paid", customer: "cus_123" },
+        { type: "customer.subscription.updated", customer: "cus_123" },
+        { type: "payment_intent.succeeded", customer: "cus_123" },
       ]
 
-      for (const eventType of allowedEventTypes) {
+      for (const { type, customer } of eventTypes) {
         mockWebhooksConstructEvent.mockReturnValue({
-          type: eventType,
-          data: {
-            object: {
-              customer: "cus_123",
-            },
-          },
+          type,
+          data: { object: { customer } },
         })
 
         await service.handleWebhook(stripeAccountId, signature, rawBody)
 
-        expect(stripeAccountRepository.findOneById).toHaveBeenCalledWith(
-          stripeAccountId,
-        )
-        expect(
-          stripeCustomerRepository.findOneByStripeCustomerId,
-        ).toHaveBeenCalledWith("cus_123")
-        expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
-          CustomerUpdatedEvent.eventName,
-          expect.objectContaining({
-            customerId: "cust_123",
-            data: expect.objectContaining({
-              type: "customer.updated",
-            }),
-          }),
+        expect(webhookDispatcher.dispatch).toHaveBeenCalledWith(
+          expect.objectContaining({ type }),
+          expect.any(Object),
         )
       }
-    })
-
-    it("should emit CustomerUpdatedEvent with receiptUrl for invoice.paid event", async () => {
-      const hostedInvoiceUrl = "https://stripe.com/invoice/123"
-      mockWebhooksConstructEvent.mockReturnValue({
-        type: "invoice.paid",
-        data: {
-          object: {
-            customer: "cus_123",
-            hosted_invoice_url: hostedInvoiceUrl,
-          },
-        },
-      })
-
-      await service.handleWebhook(stripeAccountId, signature, rawBody)
-
-      expect(stripeAccountRepository.findOneById).toHaveBeenCalledWith(
-        stripeAccountId,
-      )
-      expect(
-        stripeCustomerRepository.findOneByStripeCustomerId,
-      ).toHaveBeenCalledWith("cus_123")
-      // Should emit twice: once for customer.updated, once for invoice.paid
-      expect(eventEmitter.emitAsync).toHaveBeenCalledTimes(2)
-      // First emit: customer.updated
-      expect(eventEmitter.emitAsync).toHaveBeenNthCalledWith(
-        1,
-        CustomerUpdatedEvent.eventName,
-        expect.objectContaining({
-          customerId: "cust_123",
-          data: expect.objectContaining({ type: "customer.updated" }),
-        }),
-      )
-      // Second emit: invoice.paid with receiptUrl
-      expect(eventEmitter.emitAsync).toHaveBeenNthCalledWith(
-        2,
-        CustomerUpdatedEvent.eventName,
-        expect.objectContaining({
-          customerId: "cust_123",
-          data: expect.objectContaining({
-            type: "invoice.paid",
-            receiptUrl: hostedInvoiceUrl,
-          }),
-        }),
-      )
     })
   })
 })
