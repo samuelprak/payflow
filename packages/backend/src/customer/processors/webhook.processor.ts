@@ -8,6 +8,7 @@ import {
 import { Customer } from "src/customer/entities/customer.entity"
 import { CustomerUpdatedEvent } from "src/customer/events/customer-updated.event"
 import { CustomerGet } from "src/customer/models/dto/customer-get.dto"
+import { EarlyFraudWarningGet } from "src/customer/models/dto/early-fraud-warning-get.dto"
 import { InvoicePaidGet } from "src/customer/models/dto/invoice-paid-get.dto"
 import { WebhookEvent } from "src/customer/models/dto/webhook-event.dto"
 import { CustomerRepository } from "src/customer/repositories/customer.repository"
@@ -51,6 +52,14 @@ export class WebhookProcessor extends WorkerHost {
         return this.getCustomerUpdatedWebhookEvent(customer)
       case "invoice.paid":
         return this.getInvoicePaidWebhookEvent(customer, data.data.receiptUrl)
+      case "early_fraud_warning":
+        return this.getEarlyFraudWarningWebhookEvent(
+          customer,
+          data.data.fraudType,
+          data.data.chargeId,
+          data.data.chargeRefunded,
+          data.data.subscriptionsCancelled,
+        )
     }
   }
 
@@ -79,6 +88,27 @@ export class WebhookProcessor extends WorkerHost {
       data: {
         type: "invoice.paid",
         invoice: InvoicePaidGet.fromEntity(customer, receiptUrl),
+      },
+    }
+  }
+
+  private getEarlyFraudWarningWebhookEvent(
+    customer: Customer,
+    fraudType: string,
+    chargeId: string,
+    chargeRefunded: boolean,
+    subscriptionsCancelled: number,
+  ): WebhookEvent {
+    return {
+      data: {
+        type: "early_fraud_warning",
+        earlyFraudWarning: EarlyFraudWarningGet.fromEntity(
+          customer,
+          fraudType,
+          chargeId,
+          chargeRefunded,
+          subscriptionsCancelled,
+        ),
       },
     }
   }
