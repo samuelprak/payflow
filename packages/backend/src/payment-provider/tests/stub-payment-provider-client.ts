@@ -3,9 +3,7 @@ import { BaseCheckoutSession } from "src/payment-provider/interfaces/base-checko
 import { PaymentProviderClientInterface } from "src/payment-provider/interfaces/payment-provider-client.interface"
 import { PortalSession } from "src/payment-provider/interfaces/portal-session"
 
-export class StubPaymentProviderClient
-  implements PaymentProviderClientInterface
-{
+export class StubPaymentProviderClient implements PaymentProviderClientInterface {
   createCheckoutSession(): Promise<BaseCheckoutSession> {
     return Promise.resolve({ checkoutUrl: "https://example.com/checkout" })
   }

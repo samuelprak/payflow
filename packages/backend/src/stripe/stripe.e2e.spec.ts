@@ -33,7 +33,7 @@ describe("Stripe Webhook", () => {
   let stripeAccount: StripeAccount
   let stripeCustomer: StripeCustomer
   let eventEmitter: EventEmitter2
-  let emitAsyncSpy: jest.SpyInstance
+  let emitAsyncSpy: jest.Spied<EventEmitter2["emitAsync"]>
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({

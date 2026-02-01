@@ -8,9 +8,9 @@ import { CustomRequest } from "src/request"
 import { ObjectLiteral, Repository } from "typeorm"
 
 @Injectable()
-export abstract class BaseHook<T extends ObjectLiteral & { id: string }>
-  implements SubjectBeforeFilterHook<T, CustomRequest>
-{
+export abstract class BaseHook<
+  T extends ObjectLiteral & { id: string },
+> implements SubjectBeforeFilterHook<T, CustomRequest> {
   abstract entity: new () => T
   abstract param: string
 

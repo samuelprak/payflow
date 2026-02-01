@@ -21,24 +21,18 @@ export async function getSubscriptions({
   )
 
   return runningSubscriptions.map((subscription) => {
-    const {
-      id,
-      items,
-      status,
-      current_period_start,
-      current_period_end,
-      default_payment_method,
-    } = subscription
+    const { id, items, status, default_payment_method } = subscription
 
-    const price = items.data[0].price
+    const firstItem = items.data[0]
+    const price = firstItem.price
 
     return {
       shouldProvideProduct: SHOULD_PROVIDE_PRODUCT_STATUSES.includes(status),
       hasPastDueSubscription: status === "past_due",
       externalRef: id,
-      productExternalRef: items.data[0].price.id,
-      currentPeriodStart: new Date(current_period_start * 1000),
-      currentPeriodEnd: new Date(current_period_end * 1000),
+      productExternalRef: firstItem.price.id,
+      currentPeriodStart: new Date(firstItem.current_period_start * 1000),
+      currentPeriodEnd: new Date(firstItem.current_period_end * 1000),
       cancelAtPeriodEnd:
         subscription.cancel_at_period_end ||
         subscription.cancellation_details?.reason === "cancellation_requested",

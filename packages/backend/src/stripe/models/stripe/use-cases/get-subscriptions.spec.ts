@@ -16,8 +16,6 @@ describe("getSubscriptions", () => {
       {
         id: "sub_123",
         status: "active",
-        current_period_start: 1633046400,
-        current_period_end: 1635724800,
         cancel_at_period_end: false,
         default_payment_method: {
           card: {
@@ -30,6 +28,8 @@ describe("getSubscriptions", () => {
         items: {
           data: [
             {
+              current_period_start: 1633046400,
+              current_period_end: 1635724800,
               price: { id: "price_123", unit_amount: 1000, currency: "usd" },
             },
           ],
@@ -68,13 +68,13 @@ describe("getSubscriptions", () => {
       {
         id: "sub_123",
         status: "canceled",
-        current_period_start: 1633046400,
-        current_period_end: 1635724800,
         default_payment_method: null,
         cancel_at_period_end: false,
         items: {
           data: [
             {
+              current_period_start: 1633046400,
+              current_period_end: 1635724800,
               price: { id: "price_123", unit_amount: 1000, currency: "usd" },
             },
           ],
@@ -96,13 +96,13 @@ describe("getSubscriptions", () => {
       {
         id: "sub_123",
         status: "active",
-        current_period_start: 1633046400,
-        current_period_end: 1635724800,
         default_payment_method: null,
         cancel_at_period_end: false,
         items: {
           data: [
             {
+              current_period_start: 1633046400,
+              current_period_end: 1635724800,
               price: { id: "price_123", unit_amount: 1000, currency: "usd" },
             },
           ],
@@ -137,8 +137,6 @@ describe("getSubscriptions", () => {
       {
         id: "sub_123",
         status: "past_due",
-        current_period_start: 1633046400,
-        current_period_end: 1635724800,
         cancel_at_period_end: false,
         default_payment_method: {
           card: {
@@ -151,6 +149,8 @@ describe("getSubscriptions", () => {
         items: {
           data: [
             {
+              current_period_start: 1633046400,
+              current_period_end: 1635724800,
               price: { id: "price_123", unit_amount: 1000, currency: "usd" },
             },
           ],
@@ -189,8 +189,6 @@ describe("getSubscriptions", () => {
       {
         id: "sub_123",
         status: "active",
-        current_period_start: 1633046400,
-        current_period_end: 1635724800,
         cancel_at_period_end: false,
         default_payment_method: {
           card: {
@@ -203,6 +201,8 @@ describe("getSubscriptions", () => {
         items: {
           data: [
             {
+              current_period_start: 1633046400,
+              current_period_end: 1635724800,
               price: { id: "price_123", unit_amount: 1000, currency: "usd" },
             },
           ],

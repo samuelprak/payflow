@@ -19,9 +19,7 @@ export type StripePaymentProviderClientConstructorParams = {
   publishableKey: string
 }
 
-export class StripePaymentProviderClient
-  implements PaymentProviderClientInterface
-{
+export class StripePaymentProviderClient implements PaymentProviderClientInterface {
   private readonly publishableKey: string
   private readonly stripe: Stripe
 

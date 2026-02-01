@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common"
+import { Injectable } from "@nestjs/common"
 import { CustomerRepository } from "src/customer/repositories/customer.repository"
 import { SubscriptionUpdateProduct } from "src/payment-provider/interfaces/subscription-update-params"
 import { PaymentProviderService } from "src/payment-provider/services/payment-provider.service"
