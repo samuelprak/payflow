@@ -9,6 +9,9 @@ import {
 import Stripe from "stripe"
 
 @Injectable()
+// "invoice.paid" is intentionally handled by both this handler (generic customer update)
+// and InvoicePaidWebhookHandler (payment receipt with URL). Different downstream consumers
+// use different event types.
 @StripeWebhookHandler({
   eventTypes: [
     "checkout.session.async_payment_succeeded",

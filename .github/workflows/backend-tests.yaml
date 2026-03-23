@@ -10,6 +10,30 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: payflow
+          POSTGRES_PASSWORD: payflow123
+          POSTGRES_DB: payflow
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U payflow -d payflow"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
@@ -30,3 +54,6 @@ jobs:
 
       - name: Run tests
         run: npm run test --ws
+        env:
+          DATABASE_URL: postgres://payflow:payflow123@localhost:5432/payflow
+          REDIS_URL: redis://localhost:6379

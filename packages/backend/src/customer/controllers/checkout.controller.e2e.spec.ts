@@ -8,10 +8,11 @@ import { CustomerModule } from "src/customer/customer.module"
 import { CheckoutSessionFactory } from "src/customer/factories/checkout-session.factory"
 import { StubPaymentProviderModule } from "src/payment-provider/tests/stub-payment-provider.module"
 import { CustomRequest } from "src/request"
-import * as request from "supertest"
+import request from "supertest"
 import { createTestingApplication } from "test/utils/create-testing-application"
-import { TestBullModule } from "test/utils/test-bull.module"
-import { TestDatabaseModule } from "test/utils/test-database/test-database.module"
+import { SharedBullModule } from "@lyrolab/nest-shared/bull"
+import { SharedRedisModule } from "@lyrolab/nest-shared/redis"
+import { TestDatabaseModule } from "test/helpers/database"
 import { v4 as uuidv4 } from "uuid"
 
 describe("CheckoutController", () => {
@@ -20,8 +21,9 @@ describe("CheckoutController", () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
-        TestBullModule.forRoot(),
-        TestDatabaseModule.forRoot(),
+        TestDatabaseModule,
+        SharedRedisModule.forTest(),
+        SharedBullModule.forRoot(),
         CaslModule.forRoot<Roles, CaslUser, CustomRequest>({
           getUserFromRequest: (request: CustomRequest) =>
             new CaslUser(request.tenant.id),

@@ -5,7 +5,7 @@ import { StripeCustomer } from "src/stripe/entities/stripe-customer.entity"
 import { StripeCustomerFactory } from "src/stripe/factories/stripe-customer.factory"
 import { StripeCustomerRepository } from "src/stripe/repositories/stripe-customer.repository"
 import { assertDifference } from "test/helpers/assert-difference"
-import { TestDatabaseModule } from "test/utils/test-database/test-database.module"
+import { TestDatabaseModule } from "test/helpers/database"
 import { v4 as uuidv4 } from "uuid"
 
 describe("StripeCustomerRepository", () => {
@@ -14,10 +14,7 @@ describe("StripeCustomerRepository", () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [
-        TestDatabaseModule.forRoot(),
-        TypeOrmModule.forFeature([StripeCustomer]),
-      ],
+      imports: [TestDatabaseModule, TypeOrmModule.forFeature([StripeCustomer])],
       providers: [StripeCustomerRepository],
     }).compile()
 

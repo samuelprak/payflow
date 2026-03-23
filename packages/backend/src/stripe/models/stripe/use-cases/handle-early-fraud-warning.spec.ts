@@ -52,6 +52,7 @@ describe("handleEarlyFraudWarning", () => {
       const result = await handleEarlyFraudWarning({
         stripe,
         earlyFraudWarning,
+        stripeCustomerId: "cus_123",
       })
 
       expect(result).toEqual({
@@ -60,35 +61,8 @@ describe("handleEarlyFraudWarning", () => {
         chargeRefunded: false,
         subscriptionsCancelled: 0,
         subscriptionCancellationsFailed: 0,
-        stripeCustomerId: null,
       })
       expect(mockRetrieveCharge).not.toHaveBeenCalled()
-      expect(mockRefundCharge).not.toHaveBeenCalled()
-    })
-  })
-
-  describe("when charge has no customer", () => {
-    it("should skip processing for guest checkout", async () => {
-      const earlyFraudWarning = createEarlyFraudWarning()
-
-      mockRetrieveCharge.mockResolvedValue({
-        id: "ch_123",
-        customer: null,
-      } as unknown as Stripe.Charge)
-
-      const result = await handleEarlyFraudWarning({
-        stripe,
-        earlyFraudWarning,
-      })
-
-      expect(result).toEqual({
-        skipped: true,
-        skipReason: "Charge has no associated customer (guest checkout)",
-        chargeRefunded: false,
-        subscriptionsCancelled: 0,
-        subscriptionCancellationsFailed: 0,
-        stripeCustomerId: null,
-      })
       expect(mockRefundCharge).not.toHaveBeenCalled()
     })
   })
@@ -125,6 +99,7 @@ describe("handleEarlyFraudWarning", () => {
       const result = await handleEarlyFraudWarning({
         stripe,
         earlyFraudWarning,
+        stripeCustomerId: "cus_123",
       })
 
       expect(result).toEqual({
@@ -132,7 +107,6 @@ describe("handleEarlyFraudWarning", () => {
         chargeRefunded: true,
         subscriptionsCancelled: 2,
         subscriptionCancellationsFailed: 0,
-        stripeCustomerId: "cus_123",
       })
 
       expect(mockRefundCharge).toHaveBeenCalledWith({
@@ -171,6 +145,7 @@ describe("handleEarlyFraudWarning", () => {
       const result = await handleEarlyFraudWarning({
         stripe,
         earlyFraudWarning,
+        stripeCustomerId: "cus_123",
       })
 
       expect(result.subscriptionsCancelled).toBe(2)
@@ -194,6 +169,7 @@ describe("handleEarlyFraudWarning", () => {
       const result = await handleEarlyFraudWarning({
         stripe,
         earlyFraudWarning,
+        stripeCustomerId: "cus_123",
       })
 
       expect(result).toEqual({
@@ -201,7 +177,6 @@ describe("handleEarlyFraudWarning", () => {
         chargeRefunded: true,
         subscriptionsCancelled: 0,
         subscriptionCancellationsFailed: 0,
-        stripeCustomerId: "cus_123",
       })
 
       expect(mockCancelSubscriptionImmediately).not.toHaveBeenCalled()
@@ -223,6 +198,7 @@ describe("handleEarlyFraudWarning", () => {
       const result = await handleEarlyFraudWarning({
         stripe,
         earlyFraudWarning,
+        stripeCustomerId: "cus_123",
       })
 
       expect(result.chargeRefunded).toBe(false)
@@ -232,9 +208,12 @@ describe("handleEarlyFraudWarning", () => {
     it("should handle refund error for already refunded charge gracefully", async () => {
       const earlyFraudWarning = createEarlyFraudWarning()
 
-      mockRefundCharge.mockRejectedValue(
-        new Error("Charge ch_123 has already been refunded"),
-      )
+      const stripeError = new Stripe.errors.StripeInvalidRequestError({
+        message: "Charge ch_123 has already been refunded",
+        type: "invalid_request_error",
+      })
+      Object.assign(stripeError, { code: "charge_already_refunded" })
+      mockRefundCharge.mockRejectedValue(stripeError)
       ;(stripe.subscriptions.list as jest.Mock)
         .mockResolvedValueOnce({ data: [{ id: "sub_1" }] })
         .mockResolvedValueOnce({ data: [] })
@@ -247,6 +226,7 @@ describe("handleEarlyFraudWarning", () => {
       const result = await handleEarlyFraudWarning({
         stripe,
         earlyFraudWarning,
+        stripeCustomerId: "cus_123",
       })
 
       expect(result.chargeRefunded).toBe(false)
@@ -256,10 +236,19 @@ describe("handleEarlyFraudWarning", () => {
     it("should propagate unexpected refund errors", async () => {
       const earlyFraudWarning = createEarlyFraudWarning()
 
-      mockRefundCharge.mockRejectedValue(new Error("Unexpected Stripe error"))
+      const stripeError = new Stripe.errors.StripeInvalidRequestError({
+        message: "Unexpected Stripe error",
+        type: "invalid_request_error",
+      })
+      Object.assign(stripeError, { code: "some_other_code" })
+      mockRefundCharge.mockRejectedValue(stripeError)
 
       await expect(
-        handleEarlyFraudWarning({ stripe, earlyFraudWarning }),
+        handleEarlyFraudWarning({
+          stripe,
+          earlyFraudWarning,
+          stripeCustomerId: "cus_123",
+        }),
       ).rejects.toThrow("Unexpected Stripe error")
     })
 
@@ -286,6 +275,7 @@ describe("handleEarlyFraudWarning", () => {
       const result = await handleEarlyFraudWarning({
         stripe,
         earlyFraudWarning,
+        stripeCustomerId: "cus_123",
       })
 
       expect(result.subscriptionsCancelled).toBe(2)
@@ -302,33 +292,16 @@ describe("handleEarlyFraudWarning", () => {
         .mockResolvedValueOnce({ data: [] })
         .mockResolvedValueOnce({ data: [] })
 
-      await handleEarlyFraudWarning({ stripe, earlyFraudWarning })
+      await handleEarlyFraudWarning({
+        stripe,
+        earlyFraudWarning,
+        stripeCustomerId: "cus_123",
+      })
 
       expect(mockRetrieveCharge).toHaveBeenCalledWith({
         stripe,
         chargeId: "ch_456",
       })
-    })
-
-    it("should handle customer object instead of string", async () => {
-      mockRetrieveCharge.mockResolvedValue({
-        id: "ch_123",
-        customer: { id: "cus_789" } as Stripe.Customer,
-        refunded: false,
-      } as unknown as Stripe.Charge)
-
-      const earlyFraudWarning = createEarlyFraudWarning()
-
-      ;(stripe.subscriptions.list as jest.Mock)
-        .mockResolvedValueOnce({ data: [] })
-        .mockResolvedValueOnce({ data: [] })
-
-      const result = await handleEarlyFraudWarning({
-        stripe,
-        earlyFraudWarning,
-      })
-
-      expect(result.stripeCustomerId).toBe("cus_789")
     })
   })
 })

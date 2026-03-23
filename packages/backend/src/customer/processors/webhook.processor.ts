@@ -59,6 +59,7 @@ export class WebhookProcessor extends WorkerHost {
           data.data.chargeId,
           data.data.chargeRefunded,
           data.data.subscriptionsCancelled,
+          data.data.subscriptionCancellationsFailed,
         )
     }
   }
@@ -98,6 +99,7 @@ export class WebhookProcessor extends WorkerHost {
     chargeId: string,
     chargeRefunded: boolean,
     subscriptionsCancelled: number,
+    subscriptionCancellationsFailed: number,
   ): WebhookEvent {
     return {
       data: {
@@ -108,6 +110,7 @@ export class WebhookProcessor extends WorkerHost {
           chargeId,
           chargeRefunded,
           subscriptionsCancelled,
+          subscriptionCancellationsFailed,
         ),
       },
     }

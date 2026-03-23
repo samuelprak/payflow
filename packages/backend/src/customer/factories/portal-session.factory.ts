@@ -8,13 +8,13 @@ import {
   PortalSession,
   DEFAULT_EXPIRATION_TIME,
 } from "src/customer/entities/portal-session.entity"
-import { TestDatabaseModule } from "test/utils/test-database/test-database.module"
+import { SharedDatabaseModule } from "@lyrolab/nest-shared/database"
 import { TenantFactory } from "src/tenant/factories/tenant.factory"
 import { CustomerFactory } from "src/customer/factories/customer.factory"
 
 export class PortalSessionFactory extends Factory<PortalSession> {
   protected entity = PortalSession
-  protected dataSource = TestDatabaseModule.getDataSource()
+  protected dataSource = SharedDatabaseModule.getTestDataSource()
 
   protected attrs(): FactorizedAttrs<PortalSession> {
     return {

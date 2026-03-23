@@ -12,6 +12,7 @@ export type CustomerUpdatedEventData =
       chargeId: string
       chargeRefunded: boolean
       subscriptionsCancelled: number
+      subscriptionCancellationsFailed: number
     }
 
 export class CustomerUpdatedEvent {

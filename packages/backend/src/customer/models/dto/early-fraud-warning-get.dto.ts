@@ -8,6 +8,7 @@ export class EarlyFraudWarningGet {
   chargeId: string
   chargeRefunded: boolean
   subscriptionsCancelled: number
+  subscriptionCancellationsFailed: number
 
   static fromEntity(
     entity: Customer,
@@ -15,6 +16,7 @@ export class EarlyFraudWarningGet {
     chargeId: string,
     chargeRefunded: boolean,
     subscriptionsCancelled: number,
+    subscriptionCancellationsFailed: number,
   ): EarlyFraudWarningGet {
     return {
       id: entity.id,
@@ -24,6 +26,7 @@ export class EarlyFraudWarningGet {
       chargeId,
       chargeRefunded,
       subscriptionsCancelled,
+      subscriptionCancellationsFailed,
     }
   }
 }

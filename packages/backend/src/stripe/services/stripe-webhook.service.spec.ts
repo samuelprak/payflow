@@ -5,6 +5,7 @@ import { StripeAccountRepository } from "../repositories/stripe-account.reposito
 import { StripeCustomerRepository } from "../repositories/stripe-customer.repository"
 import { StripeWebhookDispatcherService } from "./stripe-webhook-dispatcher.service"
 import { StripeWebhookService } from "./stripe-webhook.service"
+import { WebhookDeduplicationService } from "./webhook-deduplication.service"
 import { StripeCustomer } from "../entities/stripe-customer.entity"
 import Stripe from "stripe"
 
@@ -17,6 +18,7 @@ describe("StripeWebhookService", () => {
   let stripeAccountRepository: jest.Mocked<StripeAccountRepository>
   let stripeCustomerRepository: jest.Mocked<StripeCustomerRepository>
   let webhookDispatcher: jest.Mocked<StripeWebhookDispatcherService>
+  let deduplicationService: jest.Mocked<WebhookDeduplicationService>
 
   const mockStripeAccount = {
     id: "acc_123",
@@ -49,6 +51,10 @@ describe("StripeWebhookService", () => {
       dispatch: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<StripeWebhookDispatcherService>
 
+    deduplicationService = {
+      isDuplicate: jest.fn().mockResolvedValue(false),
+    } as unknown as jest.Mocked<WebhookDeduplicationService>
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         StripeWebhookService,
@@ -63,6 +69,10 @@ describe("StripeWebhookService", () => {
         {
           provide: StripeWebhookDispatcherService,
           useValue: webhookDispatcher,
+        },
+        {
+          provide: WebhookDeduplicationService,
+          useValue: deduplicationService,
         },
       ],
     }).compile()
@@ -230,6 +240,44 @@ describe("StripeWebhookService", () => {
           expect.any(Object),
         )
       }
+    })
+
+    it("should return early when event is duplicate", async () => {
+      const mockEvent = {
+        id: "evt_123",
+        type: "checkout.session.completed",
+        data: { object: { customer: "cus_123" } },
+      } as unknown as Stripe.Event
+
+      mockWebhooksConstructEvent.mockReturnValue(mockEvent)
+      deduplicationService.isDuplicate.mockResolvedValue(true)
+
+      await service.handleWebhook(stripeAccountId, signature, rawBody)
+
+      expect(deduplicationService.isDuplicate).toHaveBeenCalledWith(
+        "evt_123",
+        stripeAccountId,
+      )
+      expect(webhookDispatcher.dispatch).not.toHaveBeenCalled()
+    })
+
+    it("should proceed when event is not duplicate", async () => {
+      const mockEvent = {
+        id: "evt_123",
+        type: "checkout.session.completed",
+        data: { object: { customer: "cus_123" } },
+      } as unknown as Stripe.Event
+
+      mockWebhooksConstructEvent.mockReturnValue(mockEvent)
+      deduplicationService.isDuplicate.mockResolvedValue(false)
+
+      await service.handleWebhook(stripeAccountId, signature, rawBody)
+
+      expect(deduplicationService.isDuplicate).toHaveBeenCalledWith(
+        "evt_123",
+        stripeAccountId,
+      )
+      expect(webhookDispatcher.dispatch).toHaveBeenCalled()
     })
   })
 })

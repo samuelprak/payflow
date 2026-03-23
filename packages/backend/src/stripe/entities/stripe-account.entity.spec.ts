@@ -2,7 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing"
 import { getRepositoryToken, TypeOrmModule } from "@nestjs/typeorm"
 import { StripeAccount } from "src/stripe/entities/stripe-account.entity"
 import { StripeAccountFactory } from "src/stripe/factories/stripe-account.factory"
-import { TestDatabaseModule } from "test/utils/test-database/test-database.module"
+import { TestDatabaseModule } from "test/helpers/database"
 import { Repository } from "typeorm"
 
 describe("StripeAccountEntity", () => {
@@ -11,10 +11,7 @@ describe("StripeAccountEntity", () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [
-        TestDatabaseModule.forRoot(),
-        TypeOrmModule.forFeature([StripeAccount]),
-      ],
+      imports: [TestDatabaseModule, TypeOrmModule.forFeature([StripeAccount])],
     }).compile()
 
     repository = module.get(getRepositoryToken(StripeAccount))

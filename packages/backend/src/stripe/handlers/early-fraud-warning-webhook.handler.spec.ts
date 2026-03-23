@@ -6,12 +6,18 @@ import { CustomerUpdatedEvent } from "src/customer/events/customer-updated.event
 import { StripeWebhookContext } from "src/stripe/interfaces/stripe-webhook-handler.interface"
 import { StripeCustomer } from "src/stripe/entities/stripe-customer.entity"
 import { handleEarlyFraudWarning } from "src/stripe/models/stripe/use-cases/handle-early-fraud-warning"
+import { retrieveCharge } from "src/stripe/models/stripe/client/retrieve-charge"
 import Stripe from "stripe"
 
 jest.mock("src/stripe/models/stripe/use-cases/handle-early-fraud-warning")
+jest.mock("src/stripe/models/stripe/client/retrieve-charge")
 
 const mockHandleEarlyFraudWarning =
   handleEarlyFraudWarning as jest.MockedFunction<typeof handleEarlyFraudWarning>
+
+const mockRetrieveCharge = retrieveCharge as jest.MockedFunction<
+  typeof retrieveCharge
+>
 
 describe("EarlyFraudWarningWebhookHandler", () => {
   let handler: EarlyFraudWarningWebhookHandler
@@ -70,6 +76,12 @@ describe("EarlyFraudWarningWebhookHandler", () => {
         .mockResolvedValue(mockStripeCustomer),
     } as unknown as jest.Mocked<StripeCustomerRepository>
 
+    mockRetrieveCharge.mockResolvedValue({
+      id: "ch_123",
+      customer: "cus_123",
+      refunded: false,
+    } as unknown as Stripe.Charge)
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EarlyFraudWarningWebhookHandler,
@@ -98,19 +110,24 @@ describe("EarlyFraudWarningWebhookHandler", () => {
         chargeRefunded: true,
         subscriptionsCancelled: 2,
         subscriptionCancellationsFailed: 0,
-        stripeCustomerId: "cus_123",
       })
 
       await handler.handle(event, mockContext)
 
-      expect(mockHandleEarlyFraudWarning).toHaveBeenCalledWith({
+      expect(mockRetrieveCharge).toHaveBeenCalledWith({
         stripe: mockContext.stripe,
-        earlyFraudWarning: event.data.object,
+        chargeId: "ch_123",
       })
 
       expect(
         stripeCustomerRepository.findOneByStripeCustomerId,
       ).toHaveBeenCalledWith("cus_123")
+
+      expect(mockHandleEarlyFraudWarning).toHaveBeenCalledWith({
+        stripe: mockContext.stripe,
+        earlyFraudWarning: event.data.object,
+        stripeCustomerId: "cus_123",
+      })
 
       expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
         CustomerUpdatedEvent.eventName,
@@ -122,60 +139,45 @@ describe("EarlyFraudWarningWebhookHandler", () => {
             chargeId: "ch_123",
             chargeRefunded: true,
             subscriptionsCancelled: 2,
+            subscriptionCancellationsFailed: 0,
           },
         }),
       )
     })
 
-    it("should skip processing when result is skipped", async () => {
+    it("should skip non-actionable warning without any Stripe calls", async () => {
       const event = createEvent({ actionable: false })
 
-      mockHandleEarlyFraudWarning.mockResolvedValue({
-        skipped: true,
-        skipReason: "Early fraud warning is not actionable",
-        chargeRefunded: false,
-        subscriptionsCancelled: 0,
-        subscriptionCancellationsFailed: 0,
-        stripeCustomerId: null,
-      })
-
       await handler.handle(event, mockContext)
 
+      expect(mockRetrieveCharge).not.toHaveBeenCalled()
+      expect(mockHandleEarlyFraudWarning).not.toHaveBeenCalled()
       expect(
         stripeCustomerRepository.findOneByStripeCustomerId,
       ).not.toHaveBeenCalled()
       expect(eventEmitter.emitAsync).not.toHaveBeenCalled()
     })
 
-    it("should not emit event when stripeCustomerId is null", async () => {
+    it("should skip guest checkout when charge has no customer", async () => {
       const event = createEvent()
 
-      mockHandleEarlyFraudWarning.mockResolvedValue({
-        skipped: false,
-        chargeRefunded: true,
-        subscriptionsCancelled: 0,
-        subscriptionCancellationsFailed: 0,
-        stripeCustomerId: null,
-      })
+      mockRetrieveCharge.mockResolvedValue({
+        id: "ch_123",
+        customer: null,
+        refunded: false,
+      } as unknown as Stripe.Charge)
 
       await handler.handle(event, mockContext)
 
+      expect(mockHandleEarlyFraudWarning).not.toHaveBeenCalled()
       expect(
         stripeCustomerRepository.findOneByStripeCustomerId,
       ).not.toHaveBeenCalled()
       expect(eventEmitter.emitAsync).not.toHaveBeenCalled()
     })
 
-    it("should not emit event when customer is not found in our system", async () => {
+    it("should skip when customer not found in our system", async () => {
       const event = createEvent()
-
-      mockHandleEarlyFraudWarning.mockResolvedValue({
-        skipped: false,
-        chargeRefunded: true,
-        subscriptionsCancelled: 1,
-        subscriptionCancellationsFailed: 0,
-        stripeCustomerId: "cus_unknown",
-      })
 
       stripeCustomerRepository.findOneByStripeCustomerId.mockResolvedValue(null)
 
@@ -183,7 +185,8 @@ describe("EarlyFraudWarningWebhookHandler", () => {
 
       expect(
         stripeCustomerRepository.findOneByStripeCustomerId,
-      ).toHaveBeenCalledWith("cus_unknown")
+      ).toHaveBeenCalledWith("cus_123")
+      expect(mockHandleEarlyFraudWarning).not.toHaveBeenCalled()
       expect(eventEmitter.emitAsync).not.toHaveBeenCalled()
     })
 
@@ -192,15 +195,25 @@ describe("EarlyFraudWarningWebhookHandler", () => {
         charge: { id: "ch_456" } as unknown as Stripe.Charge,
       })
 
+      mockRetrieveCharge.mockResolvedValue({
+        id: "ch_456",
+        customer: "cus_123",
+        refunded: false,
+      } as unknown as Stripe.Charge)
+
       mockHandleEarlyFraudWarning.mockResolvedValue({
         skipped: false,
         chargeRefunded: true,
         subscriptionsCancelled: 0,
         subscriptionCancellationsFailed: 0,
-        stripeCustomerId: "cus_123",
       })
 
       await handler.handle(event, mockContext)
+
+      expect(mockRetrieveCharge).toHaveBeenCalledWith({
+        stripe: mockContext.stripe,
+        chargeId: "ch_456",
+      })
 
       expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
         CustomerUpdatedEvent.eventName,
@@ -221,7 +234,6 @@ describe("EarlyFraudWarningWebhookHandler", () => {
         chargeRefunded: false,
         subscriptionsCancelled: 1,
         subscriptionCancellationsFailed: 0,
-        stripeCustomerId: "cus_123",
       })
 
       await handler.handle(event, mockContext)
@@ -247,6 +259,53 @@ describe("EarlyFraudWarningWebhookHandler", () => {
 
       await expect(handler.handle(event, mockContext)).rejects.toThrow(
         "Stripe API error",
+      )
+    })
+
+    it("should log warning on partial subscription cancellation failure", async () => {
+      const event = createEvent()
+      const loggerWarnSpy = jest.spyOn(handler["logger"], "warn")
+
+      mockHandleEarlyFraudWarning.mockResolvedValue({
+        skipped: false,
+        chargeRefunded: true,
+        subscriptionsCancelled: 2,
+        subscriptionCancellationsFailed: 1,
+      })
+
+      await handler.handle(event, mockContext)
+
+      expect(loggerWarnSpy).toHaveBeenCalledWith(
+        `Partial subscription cancellation failure for customer cust_123`,
+        {
+          customerId: "cust_123",
+          stripeCustomerId: "cus_123",
+          fraudWarningId: "issfr_123",
+          subscriptionsCancelled: 2,
+          subscriptionCancellationsFailed: 1,
+        },
+      )
+    })
+
+    it("should include subscriptionCancellationsFailed in emitted event", async () => {
+      const event = createEvent()
+
+      mockHandleEarlyFraudWarning.mockResolvedValue({
+        skipped: false,
+        chargeRefunded: true,
+        subscriptionsCancelled: 2,
+        subscriptionCancellationsFailed: 1,
+      })
+
+      await handler.handle(event, mockContext)
+
+      expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
+        CustomerUpdatedEvent.eventName,
+        expect.objectContaining({
+          data: expect.objectContaining({
+            subscriptionCancellationsFailed: 1,
+          }),
+        }),
       )
     })
   })

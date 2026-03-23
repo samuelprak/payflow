@@ -1,18 +1,19 @@
+import { SharedBullModule } from "@lyrolab/nest-shared/bull"
+import { SharedRedisModule } from "@lyrolab/nest-shared/redis"
 import { Module } from "@nestjs/common"
 import { ConfigModule, ConfigService } from "@nestjs/config"
+import { EventEmitterModule } from "@nestjs/event-emitter"
 import { TypeOrmModule } from "@nestjs/typeorm"
-import { CaslModule } from "nest-casl"
 import { join } from "path"
 import { CaslUser } from "src/casl/models/casl-user"
 import { Roles } from "src/casl/models/roles"
 import { PaymentProviderModule } from "src/payment-provider/payment-provider.module"
 import { CustomRequest } from "src/request"
 import { StripeModule } from "src/stripe/stripe.module"
+import { CaslModule } from "nest-casl"
 import { CustomerModule } from "./customer/customer.module"
-import { TenantModule } from "./tenant/tenant.module"
-import { BullModule } from "@nestjs/bullmq"
-import { EventEmitterModule } from "@nestjs/event-emitter"
 import { HealthModule } from "./health/health.module"
+import { TenantModule } from "./tenant/tenant.module"
 
 @Module({
   imports: [
@@ -39,15 +40,8 @@ import { HealthModule } from "./health/health.module"
       getUserFromRequest: (request: CustomRequest) =>
         new CaslUser(request.tenant.id),
     }),
-    BullModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        connection: {
-          url: configService.get("REDIS_URL") as string,
-        },
-      }),
-      inject: [ConfigService],
-    }),
+    SharedRedisModule.forRoot(),
+    SharedBullModule.forRoot(),
     EventEmitterModule.forRoot(),
     CustomerModule,
     TenantModule,

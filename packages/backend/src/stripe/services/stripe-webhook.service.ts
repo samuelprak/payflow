@@ -4,6 +4,7 @@ import { webhooksConstructEvent } from "src/stripe/models/stripe/client/webhooks
 import { StripeAccountRepository } from "src/stripe/repositories/stripe-account.repository"
 import { StripeCustomerRepository } from "src/stripe/repositories/stripe-customer.repository"
 import { StripeWebhookDispatcherService } from "src/stripe/services/stripe-webhook-dispatcher.service"
+import { WebhookDeduplicationService } from "src/stripe/services/webhook-deduplication.service"
 import Stripe from "stripe"
 
 @Injectable()
@@ -12,6 +13,7 @@ export class StripeWebhookService {
     private readonly stripeAccountRepository: StripeAccountRepository,
     private readonly stripeCustomerRepository: StripeCustomerRepository,
     private readonly webhookDispatcher: StripeWebhookDispatcherService,
+    private readonly deduplicationService: WebhookDeduplicationService,
   ) {}
 
   async handleWebhook(
@@ -34,6 +36,14 @@ export class StripeWebhookService {
       )
     } catch {
       throw new ForbiddenException("Invalid webhook signature")
+    }
+
+    const isDuplicate = await this.deduplicationService.isDuplicate(
+      event.id,
+      stripeAccountId,
+    )
+    if (isDuplicate) {
+      return
     }
 
     const context = await this.buildContext(stripeAccountId, stripe, event)

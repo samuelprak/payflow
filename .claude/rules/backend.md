@@ -1,11 +1,6 @@
----
-description: 
-globs: 
-alwaysApply: true
----
 # Backend NestJS Module Structure
 
-This document outlines the standardized structure for NestJS modules in the backend codebase, using the Chat module as the reference implementation.
+This document outlines the standardized structure for NestJS modules in the backend codebase.
 
 ## Module Organization
 
@@ -23,7 +18,6 @@ src/[feature]/
 │   └── [other-models].ts       # Non-entity classes (types, interfaces)
 ├── factories/                   # Test data factories
 └── mappers/                     # Data transformation utilities
-
 ```
 
 ## Layer Responsibilities
@@ -33,7 +27,6 @@ src/[feature]/
 - **`models/entities/`**: TypeORM database entities decorated with `@Entity()`, representing database tables
   - Use proper decorators (`@Column`, `@PrimaryGeneratedColumn("uuid")`, `@ManyToOne`, etc.)
   - Include createdAt and updatedAt with `@CreateDateColumn()` and `@UpdateDateColumn()`
-  - Example: [message.entity.ts](mdc:lyrochat/lyrochat/lyrochat/lyrochat/backend/src/chat/models/entities/message.entity.ts)
 
 - **`models/dto/`**: Data Transfer Objects for OpenAPI specification
   - Use class-validator decorators (`@IsString()`, `@IsUUID()`, `@ValidateNested()`, etc.)
@@ -41,13 +34,12 @@ src/[feature]/
   - Follow naming pattern: `[entity]-[action].dto.ts` (e.g., `message-create.dto.ts`)
   - Response DTOs should have static `fromEntity()` methods for transformation
   - The plugin @nestjs/swagger is installed, you don't need to add `@ApiProperty` decorator to DTO properties.
-  - Example: [message-create.dto.ts](mdc:lyrochat/lyrochat/lyrochat/lyrochat/backend/src/chat/models/dto/message-create.dto.ts)
+  - **Exception for enums**: For enum properties, you MUST use `@ApiProperty({ enum: EnumName, enumName: "EnumName" })` format to ensure proper OpenAPI documentation. Example: `@ApiProperty({ enum: ConversationTaskSource, enumName: "ConversationTaskSource" })`
 
 - **`models/`** (root): Non-database classes, types, interfaces, and utility models
   - Enums (e.g., `message-role.enum.ts`)
   - Type definitions and interfaces
   - Utility classes and aggregates
-  - Example: [mcp-client.ts](mdc:lyrochat/lyrochat/lyrochat/lyrochat/backend/src/chat/models/mcp-client.ts)
 
 ### Repositories Layer
 
@@ -55,7 +47,6 @@ src/[feature]/
 - **Pattern**: Inject TypeORM repositories and DataSource for transactions
 - **Methods**: Domain-specific query methods (e.g., `findByConversationId()`)
 - **Transactions**: Use DataSource manager for multi-table operations
-- **Example**: [message.repository.ts](mdc:lyrochat/lyrochat/lyrochat/lyrochat/backend/src/chat/repositories/message.repository.ts)
 
 ### Services Layer
 
@@ -63,7 +54,6 @@ src/[feature]/
 - **Dependencies**: Inject repositories, other services, and external modules
 - **Methods**: High-level business operations that orchestrate multiple data operations
 - **Error Handling**: Handle business logic validation and error scenarios
-- **Example**: [message.service.ts](mdc:lyrochat/lyrochat/lyrochat/lyrochat/backend/src/chat/services/message.service.ts)
 
 ### Controllers Layer
 
@@ -72,7 +62,6 @@ src/[feature]/
 - **OpenAPI**: Include `@ApiTags()` and `@ApiOperation()` for documentation
 - **Validation**: Use DTOs with validation pipes (`@Body()`, `@Param()`)
 - **Path Structure**: Follow RESTful conventions (e.g., `/conversations/:id/messages`)
-- **Example**: [message.controller.ts](mdc:lyrochat/lyrochat/lyrochat/lyrochat/backend/src/chat/controllers/message.controller.ts)
 
 ### Factories Directory
 
@@ -80,7 +69,6 @@ src/[feature]/
 - **Pattern**: Extend `Factory<Entity>` from `@jorgebodega/typeorm-factory`
 - **Usage**: Create realistic test data for unit and integration tests
 - **Relationships**: Use `SingleSubfactory` and `LazyInstanceAttribute` for entity relationships
-- **Example**: [message.factory.ts](mdc:lyrochat/lyrochat/lyrochat/lyrochat/backend/src/chat/factories/message.factory.ts)
 
 ## Module Definition Pattern
 
@@ -89,7 +77,6 @@ The main module file should:
 2. Import related feature modules as dependencies
 3. Provide all repositories and services in the providers array
 4. Export controllers for HTTP routing
-5. Example: [chat.module.ts](mdc:lyrochat/lyrochat/lyrochat/lyrochat/backend/src/chat/chat.module.ts)
 
 ## Testing Structure
 
@@ -107,6 +94,21 @@ The main module file should:
 - **Repositories**: End with `Repository` (e.g., `MessageRepository`)
 - **Services**: End with `Service` (e.g., `MessageService`)
 - **Controllers**: End with `Controller` (e.g., `MessageController`)
+
+## Database Migrations
+
+When making changes to database schema:
+1. Edit entity models in `models/entities/` directory
+2. Run `npm run db:generate` to auto-generate migration files
+3. Review the generated migration file
+4. Run `npm run db:migrate` to apply the migration
+
+**Important**: Never manually write migration files. Always edit entity models first, then generate migrations.
+
+## ESLint Rules
+
+- **Never disable ESLint rules** with `eslint-disable` comments. Fix the underlying issue instead.
+- **Non-null assertions (`!`)**: Instead of using `obj!.prop`, guard with `if (!obj) throw new Error("...")` to narrow the type safely.
 
 ## Key Dependencies
 

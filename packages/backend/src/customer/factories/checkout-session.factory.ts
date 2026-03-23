@@ -8,13 +8,13 @@ import {
   CheckoutSession,
   DEFAULT_EXPIRATION_TIME,
 } from "src/customer/entities/checkout-session.entity"
-import { TestDatabaseModule } from "test/utils/test-database/test-database.module"
+import { SharedDatabaseModule } from "@lyrolab/nest-shared/database"
 import { TenantFactory } from "src/tenant/factories/tenant.factory"
 import { CustomerFactory } from "src/customer/factories/customer.factory"
 
 export class CheckoutSessionFactory extends Factory<CheckoutSession> {
   protected entity = CheckoutSession
-  protected dataSource = TestDatabaseModule.getDataSource()
+  protected dataSource = SharedDatabaseModule.getTestDataSource()
 
   protected attrs(): FactorizedAttrs<CheckoutSession> {
     return {

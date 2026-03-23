@@ -6,6 +6,7 @@ import {
   Column,
   OneToMany,
   CreateDateColumn,
+  Relation,
   UpdateDateColumn,
   ManyToMany,
 } from "typeorm"
@@ -22,13 +23,13 @@ export class Tenant {
   apiKey: string
 
   @OneToMany(() => Customer, (customer) => customer.tenant)
-  customers: Customer[]
+  customers: Relation<Customer[]>
 
   @Column()
   webhookUrl: string
 
   @ManyToMany(() => StripeAccount, (stripeAccount) => stripeAccount.tenants)
-  stripeAccounts: StripeAccount[]
+  stripeAccounts: Relation<StripeAccount[]>
 
   @CreateDateColumn()
   createdAt: Date

@@ -6,11 +6,11 @@ import {
 } from "@jorgebodega/typeorm-factory"
 import { Customer } from "src/customer/entities/customer.entity"
 import { TenantFactory } from "src/tenant/factories/tenant.factory"
-import { TestDatabaseModule } from "test/utils/test-database/test-database.module"
+import { SharedDatabaseModule } from "@lyrolab/nest-shared/database"
 
 export class CustomerFactory extends Factory<Customer> {
   protected entity = Customer
-  protected dataSource = TestDatabaseModule.getDataSource()
+  protected dataSource = SharedDatabaseModule.getTestDataSource()
   protected attrs(): FactorizedAttrs<Customer> {
     return {
       email: "test@email.com",

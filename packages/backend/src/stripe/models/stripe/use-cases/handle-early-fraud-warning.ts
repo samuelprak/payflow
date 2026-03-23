@@ -9,6 +9,7 @@ const logger = new Logger("handleEarlyFraudWarning")
 type Params = {
   stripe: Stripe
   earlyFraudWarning: Stripe.Radar.EarlyFraudWarning
+  stripeCustomerId: string
 }
 
 type Result = {
@@ -17,7 +18,6 @@ type Result = {
   chargeRefunded: boolean
   subscriptionsCancelled: number
   subscriptionCancellationsFailed: number
-  stripeCustomerId: string | null
 }
 
 function extractChargeId(
@@ -26,12 +26,6 @@ function extractChargeId(
   return typeof earlyFraudWarning.charge === "string"
     ? earlyFraudWarning.charge
     : earlyFraudWarning.charge.id
-}
-
-function extractCustomerId(charge: Stripe.Charge): string | null {
-  return typeof charge.customer === "string"
-    ? charge.customer
-    : (charge.customer?.id ?? null)
 }
 
 async function tryRefundCharge(
@@ -48,8 +42,8 @@ async function tryRefundCharge(
     return true
   } catch (error) {
     if (
-      error instanceof Error &&
-      error.message.includes("already been refunded")
+      error instanceof Stripe.errors.StripeInvalidRequestError &&
+      error.code === "charge_already_refunded"
     ) {
       logger.log(`Charge ${chargeId} was already refunded`)
       return false
@@ -105,13 +99,13 @@ function createSkippedResult(skipReason: string): Result {
     chargeRefunded: false,
     subscriptionsCancelled: 0,
     subscriptionCancellationsFailed: 0,
-    stripeCustomerId: null,
   }
 }
 
 export async function handleEarlyFraudWarning({
   stripe,
   earlyFraudWarning,
+  stripeCustomerId,
 }: Params): Promise<Result> {
   if (!earlyFraudWarning.actionable) {
     return createSkippedResult("Early fraud warning is not actionable")
@@ -119,13 +113,6 @@ export async function handleEarlyFraudWarning({
 
   const chargeId = extractChargeId(earlyFraudWarning)
   const charge = await retrieveCharge({ stripe, chargeId })
-  const stripeCustomerId = extractCustomerId(charge)
-
-  if (!stripeCustomerId) {
-    return createSkippedResult(
-      "Charge has no associated customer (guest checkout)",
-    )
-  }
 
   const chargeRefunded = charge.refunded
     ? false
@@ -145,6 +132,5 @@ export async function handleEarlyFraudWarning({
     chargeRefunded,
     subscriptionsCancelled: cancelled,
     subscriptionCancellationsFailed: failed,
-    stripeCustomerId,
   }
 }

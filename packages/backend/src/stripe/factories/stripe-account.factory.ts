@@ -6,11 +6,11 @@ import {
 } from "@jorgebodega/typeorm-factory"
 import { StripeAccount } from "src/stripe/entities/stripe-account.entity"
 import { TenantFactory } from "src/tenant/factories/tenant.factory"
-import { TestDatabaseModule } from "test/utils/test-database/test-database.module"
+import { SharedDatabaseModule } from "@lyrolab/nest-shared/database"
 
 export class StripeAccountFactory extends Factory<StripeAccount> {
   protected entity = StripeAccount
-  protected dataSource = TestDatabaseModule.getDataSource()
+  protected dataSource = SharedDatabaseModule.getTestDataSource()
   protected attrs(): FactorizedAttrs<StripeAccount> {
     return {
       stripePublishableKey: "pk_test_123",

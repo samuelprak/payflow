@@ -6,6 +6,7 @@ import {
   StripeWebhookContext,
   StripeWebhookHandlerInterface,
 } from "src/stripe/interfaces/stripe-webhook-handler.interface"
+import { retrieveCharge } from "src/stripe/models/stripe/client/retrieve-charge"
 import { handleEarlyFraudWarning } from "src/stripe/models/stripe/use-cases/handle-early-fraud-warning"
 import { StripeCustomerRepository } from "src/stripe/repositories/stripe-customer.repository"
 import Stripe from "stripe"
@@ -32,30 +33,9 @@ export class EarlyFraudWarningWebhookHandler implements StripeWebhookHandlerInte
     const earlyFraudWarning = event.data
       .object as Stripe.Radar.EarlyFraudWarning
 
-    const result = await handleEarlyFraudWarning({
-      stripe: context.stripe,
-      earlyFraudWarning,
-    })
-
-    if (result.skipped) {
+    if (!earlyFraudWarning.actionable) {
       this.logger.log(
-        `Skipped early fraud warning ${earlyFraudWarning.id}: ${result.skipReason}`,
-      )
-      return
-    }
-
-    if (!result.stripeCustomerId) {
-      return
-    }
-
-    const stripeCustomer =
-      await this.stripeCustomerRepository.findOneByStripeCustomerId(
-        result.stripeCustomerId,
-      )
-
-    if (!stripeCustomer) {
-      this.logger.log(
-        `Customer ${result.stripeCustomerId} not found in our system, skipping event emission`,
+        `Skipped early fraud warning ${earlyFraudWarning.id}: not actionable`,
       )
       return
     }
@@ -65,6 +45,55 @@ export class EarlyFraudWarningWebhookHandler implements StripeWebhookHandlerInte
         ? earlyFraudWarning.charge
         : earlyFraudWarning.charge.id
 
+    const charge = await retrieveCharge({
+      stripe: context.stripe,
+      chargeId,
+    })
+
+    const stripeCustomerId =
+      typeof charge.customer === "string"
+        ? charge.customer
+        : (charge.customer?.id ?? null)
+
+    if (!stripeCustomerId) {
+      this.logger.log(
+        `Charge ${chargeId} has no associated customer (guest checkout), skipping`,
+      )
+      return
+    }
+
+    const stripeCustomer =
+      await this.stripeCustomerRepository.findOneByStripeCustomerId(
+        stripeCustomerId,
+      )
+
+    if (!stripeCustomer) {
+      this.logger.log(
+        `Customer ${stripeCustomerId} not found in our system, skipping processing`,
+      )
+      return
+    }
+
+    const result = await handleEarlyFraudWarning({
+      stripe: context.stripe,
+      earlyFraudWarning,
+      stripeCustomerId,
+    })
+
+    if (result.subscriptionCancellationsFailed > 0) {
+      this.logger.warn(
+        `Partial subscription cancellation failure for customer ${stripeCustomer.customerId}`,
+        {
+          customerId: stripeCustomer.customerId,
+          stripeCustomerId,
+          fraudWarningId: earlyFraudWarning.id,
+          subscriptionsCancelled: result.subscriptionsCancelled,
+          subscriptionCancellationsFailed:
+            result.subscriptionCancellationsFailed,
+        },
+      )
+    }
+
     await this.eventEmitter.emitAsync(
       CustomerUpdatedEvent.eventName,
       new CustomerUpdatedEvent(stripeCustomer.customerId, {
@@ -73,6 +102,7 @@ export class EarlyFraudWarningWebhookHandler implements StripeWebhookHandlerInte
         chargeId,
         chargeRefunded: result.chargeRefunded,
         subscriptionsCancelled: result.subscriptionsCancelled,
+        subscriptionCancellationsFailed: result.subscriptionCancellationsFailed,
       }),
     )
 

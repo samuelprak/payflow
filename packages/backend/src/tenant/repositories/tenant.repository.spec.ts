@@ -3,7 +3,7 @@ import { TypeOrmModule } from "@nestjs/typeorm"
 import { Tenant } from "src/tenant/entities/tenant.entity"
 import { TenantFactory } from "src/tenant/factories/tenant.factory"
 import { TenantRepository } from "src/tenant/repositories/tenant.repository"
-import { TestDatabaseModule } from "test/utils/test-database/test-database.module"
+import { TestDatabaseModule } from "test/helpers/database"
 import { v4 as uuidv4 } from "uuid"
 
 describe("TenantRepository", () => {
@@ -11,10 +11,7 @@ describe("TenantRepository", () => {
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [
-        TestDatabaseModule.forRoot(),
-        TypeOrmModule.forFeature([Tenant]),
-      ],
+      imports: [TestDatabaseModule, TypeOrmModule.forFeature([Tenant])],
       providers: [TenantRepository],
     }).compile()
 

@@ -1,6 +1,9 @@
+import { SharedBullModule } from "@lyrolab/nest-shared/bull"
+import { SharedRedisModule } from "@lyrolab/nest-shared/redis"
 import { EventEmitter2, EventEmitterModule } from "@nestjs/event-emitter"
 import { NestExpressApplication } from "@nestjs/platform-express"
 import { Test } from "@nestjs/testing"
+import Redis from "ioredis"
 import { CaslModule } from "nest-casl"
 import { CaslUser } from "src/casl/models/casl-user"
 import { Roles } from "src/casl/models/roles"
@@ -13,10 +16,9 @@ import { StripeAccountFactory } from "src/stripe/factories/stripe-account.factor
 import { StripeModule } from "src/stripe/stripe.module"
 import { Tenant } from "src/tenant/entities/tenant.entity"
 import { TenantFactory } from "src/tenant/factories/tenant.factory"
-import * as request from "supertest"
+import request from "supertest"
 import { createTestingApplication } from "test/utils/create-testing-application"
-import { TestBullModule } from "test/utils/test-bull.module"
-import { TestDatabaseModule } from "test/utils/test-database/test-database.module"
+import { TestDatabaseModule } from "test/helpers/database"
 import { webhooksConstructEvent } from "./models/stripe/client/webhooks-construct-event"
 import { v4 as uuidv4 } from "uuid"
 import { StripeCustomerFactory } from "src/stripe/factories/stripe-customer.factory"
@@ -34,12 +36,14 @@ describe("Stripe Webhook", () => {
   let stripeCustomer: StripeCustomer
   let eventEmitter: EventEmitter2
   let emitAsyncSpy: jest.Spied<EventEmitter2["emitAsync"]>
+  let redisClient: Redis
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
-        TestBullModule.forRoot(),
-        TestDatabaseModule.forRoot(),
+        SharedRedisModule.forTest(),
+        SharedBullModule.forRoot(),
+        TestDatabaseModule,
         EventEmitterModule.forRoot(),
         CaslModule.forRoot<Roles, CaslUser, CustomRequest>({
           getUserFromRequest: (request: CustomRequest) =>
@@ -52,9 +56,21 @@ describe("Stripe Webhook", () => {
     app = await createTestingApplication(moduleRef)
     eventEmitter = moduleRef.get<EventEmitter2>(EventEmitter2)
     emitAsyncSpy = jest.spyOn(eventEmitter, "emitAsync")
+    redisClient = moduleRef.get<Redis>("REDIS_CLIENT")
+  })
+
+  afterAll(async () => {
+    if (redisClient) {
+      await redisClient.quit()
+    }
   })
 
   beforeEach(async () => {
+    const keys = await redisClient.keys("stripe:event:*")
+    if (keys.length > 0) {
+      await redisClient.del(...keys)
+    }
+
     tenant = await new TenantFactory().create()
     customer = await new CustomerFactory().create({ tenant })
     stripeAccount = await new StripeAccountFactory().create({
@@ -72,6 +88,7 @@ describe("Stripe Webhook", () => {
   describe("POST /stripe-accounts/:stripeAccountId/webhook", () => {
     it("should process a valid checkout.session.completed event", async () => {
       const mockEvent = {
+        id: `evt_${uuidv4()}`,
         type: "checkout.session.completed",
         data: {
           object: {
@@ -103,6 +120,7 @@ describe("Stripe Webhook", () => {
 
     it("should process a valid invoice.paid event", async () => {
       const mockEvent = {
+        id: `evt_${uuidv4()}`,
         type: "invoice.paid",
         data: {
           object: {
@@ -125,6 +143,7 @@ describe("Stripe Webhook", () => {
 
     it("should ignore events not in the allowed list", async () => {
       const mockEvent = {
+        id: `evt_${uuidv4()}`,
         type: "not.allowed.event",
         data: {
           object: {
@@ -144,6 +163,7 @@ describe("Stripe Webhook", () => {
 
     it("should ignore events with no matching stripe customer", async () => {
       const mockEvent = {
+        id: `evt_${uuidv4()}`,
         type: "checkout.session.completed",
         data: {
           object: {
@@ -169,6 +189,7 @@ describe("Stripe Webhook", () => {
 
     it("should return 403 when signature is invalid", async () => {
       const mockEvent = {
+        id: `evt_${uuidv4()}`,
         type: "checkout.session.completed",
         data: {
           object: {
@@ -193,6 +214,7 @@ describe("Stripe Webhook", () => {
     it("should return 404 when stripe account doesn't exist", async () => {
       const nonExistentAccountId = uuidv4()
       const mockEvent = {
+        id: `evt_${uuidv4()}`,
         type: "checkout.session.completed",
         data: {
           object: {
@@ -207,6 +229,43 @@ describe("Stripe Webhook", () => {
         .send(mockEvent)
         .expect(404)
 
+      expect(emitAsyncSpy).not.toHaveBeenCalled()
+    })
+
+    it("should deduplicate webhook events with the same id", async () => {
+      const eventId = `evt_dedup_${uuidv4()}`
+      const mockEvent = {
+        id: eventId,
+        type: "checkout.session.completed",
+        data: {
+          object: {
+            customer: stripeCustomer.stripeCustomerId,
+          },
+        },
+      }
+
+      // First request — should process normally
+      await request(app.getHttpServer())
+        .post(`/stripe-accounts/${stripeAccount.id}/webhook`)
+        .set("stripe-signature", "test_signature")
+        .send(mockEvent)
+        .expect(201)
+
+      expect(emitAsyncSpy).toHaveBeenCalledWith(
+        CustomerUpdatedEvent.eventName,
+        expect.any(CustomerUpdatedEvent),
+      )
+
+      emitAsyncSpy.mockClear()
+
+      // Second request with same event id — should be deduplicated
+      await request(app.getHttpServer())
+        .post(`/stripe-accounts/${stripeAccount.id}/webhook`)
+        .set("stripe-signature", "test_signature")
+        .send(mockEvent)
+        .expect(201)
+
+      // Handler should not have been called again
       expect(emitAsyncSpy).not.toHaveBeenCalled()
     })
   })

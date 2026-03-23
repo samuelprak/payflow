@@ -6,7 +6,7 @@ import { CustomerFactory } from "src/customer/factories/customer.factory"
 import { TenantFactory } from "src/tenant/factories/tenant.factory"
 import { assertDifference } from "test/helpers/assert-difference"
 import { getRepository } from "test/helpers/get-repository"
-import { TestDatabaseModule } from "test/utils/test-database/test-database.module"
+import { TestDatabaseModule } from "test/helpers/database"
 import { CheckoutSessionFactory } from "src/customer/factories/checkout-session.factory"
 import { NotFoundException } from "@nestjs/common"
 import { v4 } from "uuid"
@@ -19,7 +19,7 @@ describe("CheckoutSessionRepository", () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
-        TestDatabaseModule.forRoot(),
+        TestDatabaseModule,
         TypeOrmModule.forFeature([CheckoutSession]),
       ],
       providers: [CheckoutSessionRepository],

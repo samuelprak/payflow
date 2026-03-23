@@ -1,10 +1,10 @@
-import { TestDatabaseModule } from "test/utils/test-database/test-database.module"
+import { SharedDatabaseModule } from "@lyrolab/nest-shared/database"
 import { DataSource, EntityTarget } from "typeorm"
 
 export async function assertDifference<T>(
   expectations: [EntityTarget<any>, number][],
   callback: () => Promise<T>,
-  dataSource: DataSource = TestDatabaseModule.getDataSource(),
+  dataSource: DataSource = SharedDatabaseModule.getTestDataSource(),
 ): Promise<T> {
   // Get initial counts for each entity
   const initialCounts = await Promise.all(

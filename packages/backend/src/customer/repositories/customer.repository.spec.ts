@@ -6,7 +6,7 @@ import { CustomerRepository } from "src/customer/repositories/customer.repositor
 import { TenantFactory } from "src/tenant/factories/tenant.factory"
 import { assertDifference } from "test/helpers/assert-difference"
 import { getRepository } from "test/helpers/get-repository"
-import { TestDatabaseModule } from "test/utils/test-database/test-database.module"
+import { TestDatabaseModule } from "test/helpers/database"
 
 describe("CustomerRepository", () => {
   let module: TestingModule
@@ -14,10 +14,7 @@ describe("CustomerRepository", () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [
-        TestDatabaseModule.forRoot(),
-        TypeOrmModule.forFeature([Customer]),
-      ],
+      imports: [TestDatabaseModule, TypeOrmModule.forFeature([Customer])],
       providers: [CustomerRepository],
     }).compile()
 
