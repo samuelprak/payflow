@@ -5,6 +5,11 @@
   "workspaces": [
     "packages/*"
   ],
+  "overrides": {
+    "nest-casl": {
+      "typeorm": "^0.3.28"
+    }
+  },
   "devDependencies": {
     "@commitlint/config-conventional": "^20.4.0",
     "commitlint": "^20.4.0",
