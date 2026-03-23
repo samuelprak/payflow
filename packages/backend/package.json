@@ -23,7 +23,8 @@
     "test:e2e": "jest --testPathPatterns=e2e",
     "typeorm": "typeorm-ts-node-commonjs -d ./src/data-source.ts",
     "db:migrate": "npm run typeorm -- migration:run",
-    "db:generate": "npm run typeorm -- migration:generate ./src/database/migrations/$npm_config_name && eslint src/database/migrations/*-$npm_config_name.ts --fix"
+    "db:generate": "npm run typeorm -- migration:generate ./src/database/migrations/$npm_config_name && eslint src/database/migrations/*-$npm_config_name.ts --fix",
+    "db:seed": "npx ts-node -r tsconfig-paths/register src/database/seed.ts"
   },
   "dependencies": {
     "@casl/ability": "^6.8.0",

@@ -1,0 +1,38 @@
+info:
+  name: 5. Create Product
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{stripeBaseUrl}}/products"
+  headers:
+    - name: Authorization
+      value: Bearer {{stripeSecretKey}}
+    - name: Content-Type
+      value: application/x-www-form-urlencoded
+  body:
+    type: form-urlencoded
+    data:
+      - name: name
+        value: QA Test Plan
+
+runtime:
+  actions:
+    - type: set-variable
+      phase: after-response
+      selector:
+        expression: res.body.id
+        method: jsonq
+      variable:
+        name: productId
+        scope: runtime
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |
+  Creates a test product. Saves `productId`.

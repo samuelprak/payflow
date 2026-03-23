@@ -1,0 +1,51 @@
+info:
+  name: 1. Sync Customer
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{backendUrl}}/customers/sync"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: x-api-key
+      value: "{{tenantApiKey}}"
+  body:
+    type: json
+    data: |-
+      {
+        "email": "customer_1@example.com",
+        "userRef": "qa-customer-1"
+      }
+
+runtime:
+  actions:
+    - type: set-variable
+      phase: after-response
+      selector:
+        expression: res.body.data.id
+        method: jsonq
+      variable:
+        name: customerId
+        scope: runtime
+    - type: set-variable
+      phase: after-response
+      selector:
+        expression: req.body.userRef
+        method: jsonq
+      variable:
+        name: userRef
+        scope: runtime
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |
+  Syncs a customer via the backend API.
+  This creates the customer in the local DB AND in Stripe,
+  linking them via the `stripe_customer` table.
+  Saves `customerId` (internal DB ID).

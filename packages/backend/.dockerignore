@@ -3,4 +3,4 @@ dist
 *.log
 *.md
 .git
-.development.env
+.env*

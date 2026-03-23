@@ -1,4 +1,5 @@
 import { ForbiddenException } from "@nestjs/common"
+import { ConfigService } from "@nestjs/config"
 import { Test, TestingModule } from "@nestjs/testing"
 import { webhooksConstructEvent } from "../models/stripe/client/webhooks-construct-event"
 import { StripeAccountRepository } from "../repositories/stripe-account.repository"
@@ -73,6 +74,10 @@ describe("StripeWebhookService", () => {
         {
           provide: WebhookDeduplicationService,
           useValue: deduplicationService,
+        },
+        {
+          provide: ConfigService,
+          useValue: { get: () => undefined },
         },
       ],
     }).compile()

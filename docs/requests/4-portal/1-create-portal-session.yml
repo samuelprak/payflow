@@ -1,0 +1,44 @@
+info:
+  name: 1. Create Portal Session
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{backendUrl}}/customers/{{customerId}}/portal-sessions"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: x-api-key
+      value: "{{tenantApiKey}}"
+  body:
+    type: json
+    data: |-
+      {
+        "returnUrl": "https://example.com/return"
+      }
+
+runtime:
+  actions:
+    - type: set-variable
+      phase: after-response
+      selector:
+        expression: res.body.data.id
+        method: jsonq
+      variable:
+        name: portalSessionId
+        scope: runtime
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: false
+  maxRedirects: 0
+
+docs: |
+  Creates a portal session for an existing customer.
+
+  **Requires:** A synced customer (`customerId`) with an active Stripe
+  subscription from the setup scenario.
+
+  Saves `portalSessionId` for use in subsequent redirect requests.

@@ -1,0 +1,58 @@
+info:
+  name: 1. Trigger Early Fraud Warning
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{backendUrl}}/stripe-accounts/{{stripeAccountId}}/webhook"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: stripe-signature
+      value: fake_signature_bypass
+  body:
+    type: json
+    data: |-
+      {
+        "id": "evt_test_efw_{{$timestamp}}",
+        "type": "radar.early_fraud_warning.created",
+        "object": "event",
+        "api_version": "2023-10-16",
+        "created": {{$timestamp}},
+        "livemode": false,
+        "pending_webhooks": 0,
+        "request": null,
+        "data": {
+          "object": {
+            "id": "issfr_test_{{$timestamp}}",
+            "object": "radar.early_fraud_warning",
+            "actionable": true,
+            "charge": "{{chargeId}}",
+            "created": {{$timestamp}},
+            "fraud_type": "unauthorized_use_of_card",
+            "livemode": false,
+            "payment_intent": null
+          }
+        }
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |
+  Sends a crafted `radar.early_fraud_warning.created` webhook event
+  to the local backend.
+
+  **Requires:** `STRIPE_SKIP_SIGNATURE_VERIFICATION=true` in .env.development
+
+  This will trigger the handler to:
+  1. Retrieve the charge from Stripe (real API call)
+  2. Look up the customer in our DB
+  3. Refund the charge (real API call)
+  4. Cancel all active subscriptions (real API call)
+
+  The `chargeId` must be a real Stripe test charge ID (set by the setup scenario).

@@ -1,0 +1,39 @@
+info:
+  name: 3. Attach Payment Method
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{stripeBaseUrl}}/payment_methods/pm_card_visa/attach"
+  headers:
+    - name: Authorization
+      value: Bearer {{stripeSecretKey}}
+    - name: Content-Type
+      value: application/x-www-form-urlencoded
+  body:
+    type: form-urlencoded
+    data:
+      - name: customer
+        value: "{{stripeCustomerId}}"
+
+runtime:
+  actions:
+    - type: set-variable
+      phase: after-response
+      selector:
+        expression: res.body.id
+        method: jsonq
+      variable:
+        name: paymentMethodId
+        scope: runtime
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |
+  Attaches the Stripe test Visa card (`pm_card_visa`) to the customer.
+  Saves the real `paymentMethodId` for use in subscription creation.

@@ -1,0 +1,28 @@
+info:
+  name: 4. Set Default Payment Method
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{stripeBaseUrl}}/customers/{{stripeCustomerId}}"
+  headers:
+    - name: Authorization
+      value: Bearer {{stripeSecretKey}}
+    - name: Content-Type
+      value: application/x-www-form-urlencoded
+  body:
+    type: form-urlencoded
+    data:
+      - name: invoice_settings[default_payment_method]
+        value: "{{paymentMethodId}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |
+  Sets the attached payment method as the customer's default
+  invoice payment method so subscriptions auto-charge.

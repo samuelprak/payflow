@@ -1,4 +1,5 @@
 import { ForbiddenException, Injectable } from "@nestjs/common"
+import { ConfigService } from "@nestjs/config"
 import { StripeWebhookContext } from "src/stripe/interfaces/stripe-webhook-handler.interface"
 import { webhooksConstructEvent } from "src/stripe/models/stripe/client/webhooks-construct-event"
 import { StripeAccountRepository } from "src/stripe/repositories/stripe-account.repository"
@@ -9,12 +10,18 @@ import Stripe from "stripe"
 
 @Injectable()
 export class StripeWebhookService {
+  private readonly skipSignatureVerification: boolean
+
   constructor(
     private readonly stripeAccountRepository: StripeAccountRepository,
     private readonly stripeCustomerRepository: StripeCustomerRepository,
     private readonly webhookDispatcher: StripeWebhookDispatcherService,
     private readonly deduplicationService: WebhookDeduplicationService,
-  ) {}
+    configService: ConfigService,
+  ) {
+    this.skipSignatureVerification =
+      configService.get("STRIPE_SKIP_SIGNATURE_VERIFICATION") === "true"
+  }
 
   async handleWebhook(
     stripeAccountId: string,
@@ -27,15 +34,19 @@ export class StripeWebhookService {
 
     let event: Stripe.Event
 
-    try {
-      event = webhooksConstructEvent(
-        stripe,
-        rawBody,
-        signature,
-        stripeAccount.stripeWebhookSecret,
-      )
-    } catch {
-      throw new ForbiddenException("Invalid webhook signature")
+    if (this.skipSignatureVerification) {
+      event = JSON.parse(rawBody.toString()) as Stripe.Event
+    } else {
+      try {
+        event = webhooksConstructEvent(
+          stripe,
+          rawBody,
+          signature,
+          stripeAccount.stripeWebhookSecret,
+        )
+      } catch {
+        throw new ForbiddenException("Invalid webhook signature")
+      }
     }
 
     const isDuplicate = await this.deduplicationService.isDuplicate(

@@ -19,7 +19,7 @@ import { TenantModule } from "./tenant/tenant.module"
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ".development.env",
+      envFilePath: [".env.development", ".env"],
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -30,7 +30,7 @@ import { TenantModule } from "./tenant/tenant.module"
         username: configService.get("DATABASE_USER"),
         password: configService.get("DATABASE_PASSWORD"),
         database: configService.get("DATABASE_NAME"),
-        entities: [join(__dirname, "../**/*.entity{.ts,.js}")],
+        entities: [join(__dirname, "**/*.entity{.ts,.js}")],
         migrations: [join(__dirname, "database/migrations/*{.ts,.js}")],
         autoLoadEntities: true,
       }),

@@ -1,0 +1,51 @@
+info:
+  name: 1. Create Checkout Session
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{backendUrl}}/customers/{{customerId}}/checkout-sessions"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: x-api-key
+      value: "{{tenantApiKey}}"
+  body:
+    type: json
+    data: |-
+      {
+        "products": [
+          {
+            "externalRef": "{{priceId}}",
+            "quantity": 1
+          }
+        ],
+        "successUrl": "https://example.com/success",
+        "cancelUrl": "https://example.com/cancel"
+      }
+
+runtime:
+  actions:
+    - type: set-variable
+      phase: after-response
+      selector:
+        expression: res.body.data.id
+        method: jsonq
+      variable:
+        name: checkoutSessionId
+        scope: runtime
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: false
+  maxRedirects: 0
+
+docs: |
+  Creates a checkout session for an existing customer.
+
+  **Requires:** A synced customer (`customerId`) and a Stripe price (`priceId`)
+  from the setup scenario.
+
+  Saves `checkoutSessionId` for use in subsequent redirect requests.

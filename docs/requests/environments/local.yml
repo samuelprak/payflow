@@ -1,0 +1,16 @@
+name: local
+variables:
+  - secret: true
+    name: stripeSecretKey
+  - name: stripeAccountId
+    value: 7a932ee8-92d1-4ebf-bccf-5d9aa681feee
+  - name: backendUrl
+    value: http://localhost:3000
+  - name: stripeBaseUrl
+    value: https://api.stripe.com/v1
+  - secret: true
+    name: tenantApiKey
+  - name: upgradePriceId
+    value: price_1S4P2LC8YLUqNQBlMDeDVWeC
+  - name: priceId
+    value: price_1R46RFC8YLUqNQBl1PhIYhG7

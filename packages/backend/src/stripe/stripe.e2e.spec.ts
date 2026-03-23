@@ -181,12 +181,6 @@ describe("Stripe Webhook", () => {
       expect(emitAsyncSpy).not.toHaveBeenCalled()
     })
 
-    it("should return 400 when raw body is missing", async () => {
-      // This test is tricky because supertest automatically adds the body
-      // In a real scenario, we'd need to mock the Express request object
-      // For now, we'll just verify the controller behavior in unit tests
-    })
-
     it("should return 403 when signature is invalid", async () => {
       const mockEvent = {
         id: `evt_${uuidv4()}`,

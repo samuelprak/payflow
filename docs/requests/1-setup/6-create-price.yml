@@ -1,0 +1,45 @@
+info:
+  name: 6. Create Price
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{stripeBaseUrl}}/prices"
+  headers:
+    - name: Authorization
+      value: Bearer {{stripeSecretKey}}
+    - name: Content-Type
+      value: application/x-www-form-urlencoded
+  body:
+    type: form-urlencoded
+    data:
+      - name: product
+        value: "{{productId}}"
+      - name: unit_amount
+        value: "2999"
+      - name: currency
+        value: usd
+      - name: recurring[interval]
+        value: month
+
+runtime:
+  actions:
+    - type: set-variable
+      phase: after-response
+      selector:
+        expression: res.body.id
+        method: jsonq
+      variable:
+        name: priceId
+        scope: runtime
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |
+  Creates a recurring monthly price ($29.99) on the product.
+  Saves `priceId`.
