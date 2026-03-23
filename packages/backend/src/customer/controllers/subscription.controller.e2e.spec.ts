@@ -11,11 +11,12 @@ import { UpgradeSubscriptionDto } from "src/customer/models/dto/upgrade-subscrip
 import { StubPaymentProviderModule } from "src/payment-provider/tests/stub-payment-provider.module"
 import { CustomRequest } from "src/request"
 import { TenantFactory } from "src/tenant/factories/tenant.factory"
-import * as request from "supertest"
+import request from "supertest"
 import { asTenant } from "test/helpers/as-tenant"
 import { createTestingApplication } from "test/utils/create-testing-application"
-import { TestBullModule } from "test/utils/test-bull.module"
-import { TestDatabaseModule } from "test/utils/test-database/test-database.module"
+import { SharedBullModule } from "@lyrolab/nest-shared/bull"
+import { SharedRedisModule } from "@lyrolab/nest-shared/redis"
+import { TestDatabaseModule } from "test/helpers/database"
 
 describe("SubscriptionController", () => {
   let app: NestExpressApplication
@@ -23,8 +24,9 @@ describe("SubscriptionController", () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
-        TestBullModule.forRoot(),
-        TestDatabaseModule.forRoot(),
+        TestDatabaseModule,
+        SharedRedisModule.forTest(),
+        SharedBullModule.forRoot(),
         CaslModule.forRoot<Roles, CaslUser, CustomRequest>({
           getUserFromRequest: (request: CustomRequest) =>
             new CaslUser(request.tenant.id),

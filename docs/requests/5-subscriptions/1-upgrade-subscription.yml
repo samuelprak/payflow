@@ -1,0 +1,42 @@
+info:
+  name: 1. Upgrade Subscription
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{backendUrl}}/subscriptions/upgrade"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: x-api-key
+      value: "{{tenantApiKey}}"
+  body:
+    type: json
+    data: |-
+      {
+        "userRef": "{{userRef}}",
+        "products": [
+          {
+            "externalRef": "{{upgradePriceId}}",
+            "quantity": 1
+          }
+        ]
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |
+  Upgrades a customer's subscription to new price(s).
+
+  **Requires:**
+  - A synced customer with `userRef: "qa-fraud-test-user"` from the setup scenario
+  - An active subscription
+  - A `upgradePriceId` variable pointing to the new Stripe price
+
+  The subscription is updated immediately with prorated billing.
+  Expects `{ "success": true }`.

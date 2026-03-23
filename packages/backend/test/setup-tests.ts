@@ -1,8 +1,11 @@
-import { closeTestingApplications } from "test/utils/create-testing-application"
-import { TestDatabaseModule } from "test/utils/test-database/test-database.module"
+import { config } from "dotenv"
 
-beforeEach(() => TestDatabaseModule.clearDatabase())
-afterAll(async () => {
-  await closeTestingApplications()
-  await TestDatabaseModule.closeConnection()
-})
+config({ path: ".env.development", quiet: true })
+config({ path: ".env", quiet: true })
+
+import { SharedDatabaseModule } from "@lyrolab/nest-shared/database"
+import { closeTestingApplications } from "test/utils/create-testing-application"
+
+beforeAll(() => SharedDatabaseModule.setupTestDatabase())
+beforeEach(() => SharedDatabaseModule.clearTestDatabase())
+afterAll(() => closeTestingApplications())

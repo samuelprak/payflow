@@ -6,11 +6,11 @@ import {
 } from "@jorgebodega/typeorm-factory"
 import { CustomerFactory } from "src/customer/factories/customer.factory"
 import { StripeCustomer } from "src/stripe/entities/stripe-customer.entity"
-import { TestDatabaseModule } from "test/utils/test-database/test-database.module"
+import { SharedDatabaseModule } from "@lyrolab/nest-shared/database"
 
 export class StripeCustomerFactory extends Factory<StripeCustomer> {
   protected entity = StripeCustomer
-  protected dataSource = TestDatabaseModule.getDataSource()
+  protected dataSource = SharedDatabaseModule.getTestDataSource()
   protected attrs(): FactorizedAttrs<StripeCustomer> {
     return {
       customer: new LazyInstanceAttribute(

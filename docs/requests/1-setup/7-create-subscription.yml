@@ -1,0 +1,56 @@
+info:
+  name: 7. Create Subscription
+  type: http
+  seq: 7
+
+http:
+  method: POST
+  url: "{{stripeBaseUrl}}/subscriptions"
+  headers:
+    - name: Authorization
+      value: Bearer {{stripeSecretKey}}
+    - name: Content-Type
+      value: application/x-www-form-urlencoded
+  body:
+    type: form-urlencoded
+    data:
+      - name: customer
+        value: "{{stripeCustomerId}}"
+      - name: items[0][price]
+        value: "{{priceId}}"
+      - name: default_payment_method
+        value: "{{paymentMethodId}}"
+      - name: expand[]
+        value: latest_invoice.payment_intent
+
+runtime:
+  actions:
+    - type: set-variable
+      phase: after-response
+      selector:
+        expression: res.body.id
+        method: jsonq
+      variable:
+        name: subscriptionId
+        scope: runtime
+    - type: set-variable
+      phase: after-response
+      selector:
+        expression: res.body.latest_invoice.payment_intent.latest_charge
+        method: jsonq
+      variable:
+        name: chargeId
+        scope: runtime
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |
+  Creates an active subscription which immediately charges the customer.
+  Saves `subscriptionId` and `chargeId` for the fraud warning scenario.
+
+  The subscription auto-charges via the default payment method, creating
+  an invoice + payment intent + charge in one go.

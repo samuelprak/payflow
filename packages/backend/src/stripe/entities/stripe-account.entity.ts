@@ -6,6 +6,7 @@ import {
   JoinTable,
   ManyToMany,
   PrimaryGeneratedColumn,
+  Relation,
   UpdateDateColumn,
 } from "typeorm"
 
@@ -25,7 +26,7 @@ export class StripeAccount {
 
   @ManyToMany(() => Tenant, (tenant) => tenant.stripeAccounts)
   @JoinTable()
-  tenants: Tenant[]
+  tenants: Relation<Tenant[]>
 
   @CreateDateColumn()
   createdAt: Date

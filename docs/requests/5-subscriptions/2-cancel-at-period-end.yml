@@ -1,0 +1,35 @@
+info:
+  name: 2. Cancel at Period End
+  type: http
+  seq: 2
+
+http:
+  method: PATCH
+  url: "{{backendUrl}}/subscriptions"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: x-api-key
+      value: "{{tenantApiKey}}"
+  body:
+    type: json
+    data: |-
+      {
+        "userRef": "{{userRef}}",
+        "cancelAtPeriodEnd": true
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |
+  Marks a subscription to cancel at the end of the current billing period.
+
+  **Requires:** A synced customer with `userRef: "qa-fraud-test-user"` and
+  an active subscription from the setup scenario.
+
+  Set `cancelAtPeriodEnd` to `false` to undo the cancellation.
+  Expects `{ "success": true }`.

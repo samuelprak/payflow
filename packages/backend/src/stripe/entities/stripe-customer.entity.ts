@@ -6,6 +6,7 @@ import {
   JoinColumn,
   OneToOne,
   PrimaryGeneratedColumn,
+  Relation,
   RelationId,
   Unique,
   UpdateDateColumn,
@@ -19,7 +20,7 @@ export class StripeCustomer {
 
   @OneToOne(() => Customer)
   @JoinColumn()
-  customer: Customer
+  customer: Relation<Customer>
 
   @RelationId((stripeCustomer: StripeCustomer) => stripeCustomer.customer)
   customerId: string

@@ -1,0 +1,49 @@
+info:
+  name: 4. Trigger Non-Actionable EFW (should be skipped)
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{backendUrl}}/stripe-accounts/{{stripeAccountId}}/webhook"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: stripe-signature
+      value: fake_signature_bypass
+  body:
+    type: json
+    data: |-
+      {
+        "id": "evt_test_efw_skip_{{$timestamp}}",
+        "type": "radar.early_fraud_warning.created",
+        "object": "event",
+        "api_version": "2023-10-16",
+        "created": {{$timestamp}},
+        "livemode": false,
+        "pending_webhooks": 0,
+        "request": null,
+        "data": {
+          "object": {
+            "id": "issfr_test_skip_{{$timestamp}}",
+            "object": "radar.early_fraud_warning",
+            "actionable": false,
+            "charge": "{{chargeId}}",
+            "created": {{$timestamp}},
+            "fraud_type": "misc",
+            "livemode": false,
+            "payment_intent": null
+          }
+        }
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |
+  Sends a non-actionable early fraud warning (`actionable: false`).
+  The handler should skip it without refunding or cancelling anything.
+  Check backend logs for confirmation.

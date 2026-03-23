@@ -7,6 +7,7 @@ import {
   Entity,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Relation,
   UpdateDateColumn,
   Unique,
   OneToOne,
@@ -26,13 +27,13 @@ export class Customer {
   userRef: string
 
   @ManyToOne(() => Tenant, (tenant) => tenant.customers)
-  tenant: Tenant
+  tenant: Relation<Tenant>
 
   @RelationId((customer: Customer) => customer.tenant)
   tenantId: string
 
   @OneToOne(() => StripeCustomer, (stripeCustomer) => stripeCustomer.customer)
-  stripeCustomer: StripeCustomer
+  stripeCustomer: Relation<StripeCustomer>
 
   @CreateDateColumn()
   createdAt: Date

@@ -1,0 +1,20 @@
+info:
+  name: 4. Checkout Cancel Redirect
+  type: http
+  seq: 4
+
+http:
+  method: GET
+  url: "{{backendUrl}}/checkout/{{checkoutSessionId}}/cancel"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: false
+  maxRedirects: 0
+
+docs: |
+  Hits the checkout cancel redirect endpoint.
+
+  Expects a 302 redirect to the `cancelUrl` configured when creating the
+  checkout session (https://example.com/cancel).

@@ -6,7 +6,7 @@ import { CustomerFactory } from "src/customer/factories/customer.factory"
 import { TenantFactory } from "src/tenant/factories/tenant.factory"
 import { assertDifference } from "test/helpers/assert-difference"
 import { getRepository } from "test/helpers/get-repository"
-import { TestDatabaseModule } from "test/utils/test-database/test-database.module"
+import { TestDatabaseModule } from "test/helpers/database"
 import { PortalSessionFactory } from "src/customer/factories/portal-session.factory"
 import { NotFoundException } from "@nestjs/common"
 import { v4 } from "uuid"
@@ -18,10 +18,7 @@ describe("PortalSessionRepository", () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [
-        TestDatabaseModule.forRoot(),
-        TypeOrmModule.forFeature([PortalSession]),
-      ],
+      imports: [TestDatabaseModule, TypeOrmModule.forFeature([PortalSession])],
       providers: [PortalSessionRepository],
     }).compile()
 

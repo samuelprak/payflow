@@ -16,7 +16,15 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true,
     "strictBindCallApply": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "src/*": ["./src/*"],
+      "test/*": ["./test/*"],
+      "@lyrolab/nest-shared/*": [
+        "./node_modules/@lyrolab/nest-shared/dist/*",
+        "../../node_modules/@lyrolab/nest-shared/dist/*"
+      ]
+    }
   },
   "ts-node": {
     "require": ["tsconfig-paths/register"]

@@ -1,0 +1,35 @@
+info:
+  name: 2. Verify Charge Refunded
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{stripeBaseUrl}}/charges/{{chargeId}}?expand[]=refunds"
+  headers:
+    - name: Authorization
+      value: Bearer {{stripeSecretKey}}
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("charge should be refunded", function() {
+          expect(res.body.refunded).to.equal(true);
+        });
+
+        test("refund reason should be fraudulent", function() {
+          const refunds = res.body.refunds.data;
+          expect(refunds.length).to.be.greaterThan(0);
+          expect(refunds[0].reason).to.equal("fraudulent");
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |
+  Verifies the charge was refunded with reason "fraudulent" after
+  the early fraud warning was processed.

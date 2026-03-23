@@ -3,7 +3,7 @@ import { TypeOrmModule } from "@nestjs/typeorm"
 import { StripeAccount } from "src/stripe/entities/stripe-account.entity"
 import { StripeAccountFactory } from "src/stripe/factories/stripe-account.factory"
 import { StripeAccountRepository } from "src/stripe/repositories/stripe-account.repository"
-import { TestDatabaseModule } from "test/utils/test-database/test-database.module"
+import { TestDatabaseModule } from "test/helpers/database"
 import { v4 as uuidv4 } from "uuid"
 
 describe("StripeAccountRepository", () => {
@@ -12,10 +12,7 @@ describe("StripeAccountRepository", () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [
-        TestDatabaseModule.forRoot(),
-        TypeOrmModule.forFeature([StripeAccount]),
-      ],
+      imports: [TestDatabaseModule, TypeOrmModule.forFeature([StripeAccount])],
       providers: [StripeAccountRepository],
     }).compile()
 

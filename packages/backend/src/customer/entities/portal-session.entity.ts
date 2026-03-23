@@ -6,6 +6,7 @@ import {
   Entity,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Relation,
   UpdateDateColumn,
 } from "typeorm"
 
@@ -17,10 +18,10 @@ export class PortalSession {
   id: string
 
   @ManyToOne(() => Customer)
-  customer: Customer
+  customer: Relation<Customer>
 
   @ManyToOne(() => Tenant)
-  tenant: Tenant
+  tenant: Relation<Tenant>
 
   @Column()
   returnUrl: string

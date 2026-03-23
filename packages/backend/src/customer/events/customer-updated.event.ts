@@ -6,6 +6,14 @@ export type CustomerUpdatedEventData =
       type: "invoice.paid"
       receiptUrl: string
     }
+  | {
+      type: "early_fraud_warning"
+      fraudType: string
+      chargeId: string
+      chargeRefunded: boolean
+      subscriptionsCancelled: number
+      subscriptionCancellationsFailed: number
+    }
 
 export class CustomerUpdatedEvent {
   static eventName = "customer.updated"
