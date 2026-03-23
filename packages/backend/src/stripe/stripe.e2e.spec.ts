@@ -1,5 +1,6 @@
 import { SharedBullModule } from "@lyrolab/nest-shared/bull"
 import { SharedRedisModule } from "@lyrolab/nest-shared/redis"
+import { ConfigModule } from "@nestjs/config"
 import { EventEmitter2, EventEmitterModule } from "@nestjs/event-emitter"
 import { NestExpressApplication } from "@nestjs/platform-express"
 import { Test } from "@nestjs/testing"
@@ -41,6 +42,11 @@ describe("Stripe Webhook", () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
+        ConfigModule.forRoot({
+          isGlobal: true,
+          ignoreEnvFile: true,
+          load: [() => ({ STRIPE_SKIP_SIGNATURE_VERIFICATION: "false" })],
+        }),
         SharedRedisModule.forTest(),
         SharedBullModule.forRoot(),
         TestDatabaseModule,
